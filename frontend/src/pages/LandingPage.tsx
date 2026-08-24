@@ -19,6 +19,7 @@ import {
   ArrowUpRight
 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
+import { SilkRoadShader } from '../components/SilkRoadShader';
 
 interface LandingPageProps {
   onStartPlanning: () => void;
@@ -207,16 +208,19 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
       {/* Main Landing Content Container */}
       <main style={{ maxWidth: '1280px', margin: '0 auto', width: '100%', padding: '48px 24px', display: 'flex', flexDirection: 'column', gap: '80px' }}>
-        {/* Hero Section */}
+        {/* Hero Section with WebGL Silk Road Shader */}
         <section style={{
           position: 'relative',
           borderRadius: 'var(--radius-xl)',
-          background: 'linear-gradient(135deg, rgba(13, 22, 48, 0.95), rgba(7, 13, 30, 0.98))',
+          background: 'linear-gradient(135deg, rgba(13, 22, 48, 0.85), rgba(7, 13, 30, 0.9))',
           border: '1px solid var(--border-active)',
           padding: '80px 56px',
           overflow: 'hidden',
           boxShadow: '0 20px 60px rgba(0, 0, 0, 0.6)'
         }}>
+          {/* Interactive WebGL Shader Canvas Background */}
+          <SilkRoadShader style={{ opacity: 0.65, borderRadius: 'var(--radius-xl)' }} />
+
           {/* Ambient Glows */}
           <div style={{
             position: 'absolute',

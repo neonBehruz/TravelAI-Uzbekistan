@@ -233,10 +233,16 @@ public class AiGuideService : IAIGuideService
 
     private async Task<AiChatResponseDto> GenerateSmartRagResponseAsync(Guid conversationId, AiChatRequestDto request)
     {
-        var msg = request.Message.Trim().ToLowerInvariant();
-        var lang = (request.Language ?? "en").ToLowerInvariant();
-        var isUz = lang.StartsWith("uz");
-        var isRu = lang.StartsWith("ru");
+        var rawMsg = request.Message.Trim();
+        var msg = rawMsg.ToLowerInvariant();
+        var reqLang = (request.Language ?? "en").ToLowerInvariant();
+
+        // Intelligent auto-detection of Uzbek language keywords
+        var uzKeywords = new[] { "qayerda", "qayerdaligini", "ayt", "menga", "haqida", "qanday", "nima", "qanaqa", "yaxshi", "borish", "narxi", "kerak", "rahmat", "salom", "boriladi", "yeyiladi", "tarixi", "bilan", "uchun", "boladi", "bo'ladi", "qiling", "bering", "necha", "qancha", "ovqat" };
+        var ruKeywords = new[] { "где", "как", "куда", "сколько", "стоит", "расскажи", "пожалуйста", "какой", "какая", "поезд", "билет", "история", "доехать", "плов", "достопримечательности" };
+
+        var isUz = reqLang.StartsWith("uz") || uzKeywords.Any(k => msg.Contains(k));
+        var isRu = !isUz && (reqLang.StartsWith("ru") || ruKeywords.Any(k => msg.Contains(k)));
 
         var places = await _dbContext.Places
             .Include(p => p.Destination)
@@ -245,22 +251,76 @@ public class AiGuideService : IAIGuideService
 
         var destinations = await _dbContext.Destinations.ToListAsync();
 
-        // 1. Search matching places in DB
+        // Check if query mentions a specific city / destination
+        var matchedDest = destinations.FirstOrDefault(d =>
+            msg.Contains(d.Name.ToLower()) ||
+            msg.Contains(d.Region.ToLower()) ||
+            (d.Name.Equals("Samarkand", StringComparison.OrdinalIgnoreCase) && (msg.Contains("samarqand") || msg.Contains("самарканд"))) ||
+            (d.Name.Equals("Bukhara", StringComparison.OrdinalIgnoreCase) && (msg.Contains("buxoro") || msg.Contains("бухара"))) ||
+            (d.Name.Equals("Khiva", StringComparison.OrdinalIgnoreCase) && (msg.Contains("xiva") || msg.Contains("хива"))) ||
+            (d.Name.Equals("Tashkent", StringComparison.OrdinalIgnoreCase) && (msg.Contains("toshkent") || msg.Contains("ташкент"))) ||
+            (d.Name.Equals("Fergana", StringComparison.OrdinalIgnoreCase) && (msg.Contains("fargona") || msg.Contains("farg'ona") || msg.Contains("фергана") || msg.Contains("qo'qon") || msg.Contains("kokand") || msg.Contains("rishton"))) ||
+            (d.Name.Equals("Kashkadarya", StringComparison.OrdinalIgnoreCase) && (msg.Contains("qashqadaryo") || msg.Contains("shahrisabz") || msg.Contains("oqsaroy") || msg.Contains("qarshi"))) ||
+            (d.Name.Equals("Surkhandarya", StringComparison.OrdinalIgnoreCase) && (msg.Contains("surxondaryo") || msg.Contains("termez") || msg.Contains("termiz") || msg.Contains("boysun"))) ||
+            (d.Name.Equals("Jizzakh", StringComparison.OrdinalIgnoreCase) && (msg.Contains("jizzax") || msg.Contains("zomin") || msg.Contains("zaamin"))) ||
+            (d.Name.Equals("Navoiy", StringComparison.OrdinalIgnoreCase) && (msg.Contains("navoiy") || msg.Contains("nurota") || msg.Contains("nurata") || msg.Contains("oydarkol") || msg.Contains("aydarkul"))) ||
+            (d.Name.Equals("Karakalpakstan", StringComparison.OrdinalIgnoreCase) && (msg.Contains("qoraqalpoq") || msg.Contains("karakalpak") || msg.Contains("nukus") || msg.Contains("moynoq") || msg.Contains("mo'ynoq") || msg.Contains("orol") || msg.Contains("aral")))
+        );
+
+        // Check if query is asking WHERE it is located (Geographical query)
+        var isLocationQuery = msg.Contains("qayerda") || msg.Contains("qayerdaligi") || msg.Contains("joylashgan") || msg.Contains("where is") || msg.Contains("location") || msg.Contains("где находится") || msg.Contains("расположен");
+
+        // Check if query mentions a specific landmark/place
         var matchedPlace = places.FirstOrDefault(p =>
             msg.Contains(p.Name.ToLower()) ||
             (!string.IsNullOrEmpty(p.LocalName) && msg.Contains(p.LocalName.ToLower())) ||
             (!string.IsNullOrEmpty(p.VisionRecognitionTags) && p.VisionRecognitionTags.Split(',').Any(t => t.Trim().Length > 3 && msg.Contains(t.Trim().ToLower())))
         );
 
-        // 2. Search matching destination in DB
-        var matchedDest = destinations.FirstOrDefault(d =>
-            msg.Contains(d.Name.ToLower()) ||
-            msg.Contains(d.Region.ToLower())
-        );
-
         string reply;
 
-        if (matchedPlace != null)
+        // 1. Specific Geography / Where is it query
+        if (isLocationQuery && matchedDest != null)
+        {
+            var d = matchedDest;
+            if (isUz)
+            {
+                reply = $"### 📍 **{d.Name}ning Geografik Joylashuvi**\n\n" +
+                        $"**{d.Name} ({d.Region})** — O'zbekistonning eng qadimiy va mashhur hududlaridan biri.\n\n" +
+                        $"#### 🗺️ **Aniq Geografik Ma'lumotlar:**\n" +
+                        $"• **Hudud:** {d.Region}\n" +
+                        $"• **Geografik koordinatalari:** `{d.Latitude:F4}° shimoliy kenglik, {d.Longitude:F4}° sharqiy uzunlik`\n" +
+                        $"• **Poytaxt Toshkentdan masofa:** Taxminan **280 – 350 km** janubi-g'arbda (Afrosiyob poyezdida 2 soat 10 daqiqa yo'l).\n" +
+                        $"• **Tabiiy joylashuvi:** Zarafshon daryosi vodiysida, qadimiy Buyuk Ipak Yo'lining markaziy chorrahasida joylashgan.\n\n" +
+                        $"#### 🏛️ **Shahar haqida qisqacha:**\n{d.Description}\n\n" +
+                        $"💡 **SAFAR AI Maslahati:** {d.Name}ga borishning eng tez va qulay usuli — Toshkentdan qatnovchi tezyurar **Afrosiyob** yoki **Sharq** poyezdidir!";
+            }
+            else if (isRu)
+            {
+                reply = $"### 📍 **Географическое расположение: {d.Name}**\n\n" +
+                        $"**{d.Name} ({d.Region})** — один из ключевых исторических и культурных центров Узбекистана.\n\n" +
+                        $"#### 🗺️ **Точные географические данные:**\n" +
+                        $"• **Регион:** {d.Region}\n" +
+                        $"• **Координаты:** `{d.Latitude:F4}° с.ш., {d.Longitude:F4}° в.д.`\n" +
+                        $"• **Расстояние от Ташкента:** Около **300 км** к юго-западу (2 часа 10 минут на скоростном поезде «Афросиаб»).\n" +
+                        $"• **Природный ландшафт:** Долина реки Зеравшан, центральный перекресток Великого Шелкового Пути.\n\n" +
+                        $"#### 🏛️ **О городе:**\n{d.Description}\n\n" +
+                        $"💡 **Совет от SAFAR AI:** Самый комфортный способ добраться до {d.Name} — фирменный скоростной поезд **Afrosiyob** из Ташкента!";
+            }
+            else
+            {
+                reply = $"### 📍 **Geographic Location of {d.Name}**\n\n" +
+                        $"**{d.Name} ({d.Region})** is situated in central-southern Uzbekistan in the fertile valley of the Zeravshan River.\n\n" +
+                        $"#### 🗺️ **Geographical Facts:**\n" +
+                        $"• **Region:** {d.Region}\n" +
+                        $"• **Coordinates:** `{d.Latitude:F4}° N, {d.Longitude:F4}° E`\n" +
+                        $"• **Distance from Tashkent:** Approximately **300 km (186 miles)** south-west (2 hours 10 minutes by Afrosiyob high-speed train).\n" +
+                        $"• **Historical Role:** The central crossroad connecting China, India, Persia, and the Mediterranean along the Silk Road.\n\n" +
+                        $"#### 🏛️ **Overview:**\n{d.Description}\n\n" +
+                        $"💡 **SAFAR AI Pro-Tip:** The fastest and most scenic way to reach {d.Name} is the daily **Afrosiyob Bullet Train** departing from Tashkent!";
+            }
+        }
+        else if (matchedPlace != null)
         {
             var p = matchedPlace;
             if (isUz)
@@ -294,7 +354,7 @@ public class AiGuideService : IAIGuideService
                         $"⏰ **Opening Hours:** {p.OpeningHours}\n\n" +
                         $"#### 📜 **Historical Significance:**\n{p.DetailedHistory}\n\n" +
                         $"#### 🏺 **Architectural Highlights:**\n{p.ArchitectureDetails}\n\n" +
-                        $"💡 **SAFAR AI Pro-Tip:** Recommended visit duration is **{p.RecommendedVisitDurationMinutes} minutes**. Golden hour before sunset offers the most stunning lighting for photography!";
+                        $"💡 **SAFAR AI Pro-Tip:** Recommended visit duration is **{p.RecommendedVisitDurationMinutes} minutes**. Golden hour before sunset offers stunning lighting for photography!";
             }
         }
         else if (matchedDest != null)
@@ -326,7 +386,7 @@ public class AiGuideService : IAIGuideService
                         $"\n\n💡 **Tip:** Use our AI Trip Planner to generate a custom itinerary for {d.Name} with automated budget and transit calculations!";
             }
         }
-        else if (msg.Contains("plov") || msg.Contains("osh") || msg.Contains("food") || msg.Contains("eat") || msg.Contains("ovqat") || msg.Contains("eda"))
+        else if (msg.Contains("plov") || msg.Contains("osh") || msg.Contains("food") || msg.Contains("eat") || msg.Contains("ovqat") || msg.Contains("eda") || msg.Contains("somsa"))
         {
             if (isUz)
             {
@@ -335,7 +395,7 @@ public class AiGuideService : IAIGuideService
                         "2. **Toshkent To'y Oshi**: Mayiz, kadi va bedana tuxumlari bilan boyitilgan klassik to'y oshi.\n" +
                         "3. **Tandir Somsa**: Jizzax yoki Samarqand uslubidagi qarsildoq xamirli, shirali tandir somsasi.\n" +
                         "4. **Shashlik & Qozon Kabob**: G'ijduvon va Buxoro qiyma shashliklari.\n\n" +
-                        "💡 **Maslahat:** Har doim issiq ko'k choy (ko'k choy) va yangi uzilgan Achichuk pomidor-piyoz salati bilan iste'mol qiling!";
+                        "💡 **Maslahat:** Har doim issiq ko'k choy va yangi uzilgan Achichuk pomidor-piyoz salati bilan iste'mol qiling!";
             }
             else if (isRu)
             {
@@ -344,7 +404,7 @@ public class AiGuideService : IAIGuideService
                         "2. **Ташкентский праздничный плов (Тўй оши)**: Классический плов с изюмом, казы и перепелиными яйцами.\n" +
                         "3. **Тандырная самса**: Хрустящая слоеная самса из Самарканда или Джизака.\n" +
                         "4. **Шашлык**: Знаменитые гиждуванские и бухарские сочные шашлыки.\n\n" +
-                        "💡 **Совет:** Плов принято запивать горячим зеленым чаем (кўк чой) со свежим салатом Ачичук!";
+                        "💡 **Совет:** Плов принято запивать горячим зеленым чаем со свежим салатом Ачичук!";
             }
             else
             {
@@ -373,7 +433,7 @@ public class AiGuideService : IAIGuideService
                         "• **Tashkent Metro**: One of the most opulent Soviet-era metro systems in the world (visit Alisher Navoi & Kosmonavtlar stations). Fare is only 2,000 UZS (~$0.15).";
             }
         }
-        else if (msg.Contains("budget") || msg.Contains("cost") || msg.Contains("narx") || msg.Contains("pul") || msg.Contains("money") || msg.Contains("dollar") || msg.Contains("som"))
+        else if (msg.Contains("budget") || msg.Contains("cost") || msg.Contains("narx") || msg.Contains("pul") || msg.Contains("money") || msg.Contains("dollar") || msg.Contains("som") || msg.Contains("so'm"))
         {
             if (isUz)
             {
@@ -415,17 +475,21 @@ public class AiGuideService : IAIGuideService
         {
             if (isUz)
             {
-                reply = $"### 🏛️ **SAFAR AI Javobi**\n\n" +
-                        $"Sizning savolingiz bo'yicha: *\"{request.Message}\"*\n\n" +
-                        $"O'zbekiston bo'ylab 14 ta viloyatdagi 50 dan ortiq qadamjolar, jumladan Registon, Shohi Zinda, Buxoro Arki, Ichan Qal'a, Zomin tog'lari va Savitskiy muzeylari haqida to'liq ma'lumot bera olaman.\n\n" +
-                        $"Quyidagi mavzular bo'yicha aniqroq ma'lumot olishni xohlaysizmi?";
+                reply = $"### 🏛️ **SAFAR AI Gidi**\n\n" +
+                        $"Sizning savolingiz: *\"{rawMsg}\"*\n\n" +
+                        $"Men O'zbekistonning barcha 14 ta viloyati bo'yicha eng dolzarb ma'lumotlarni bilaman:\n" +
+                        $"• **Tarixiy shaharlar:** Samarqand, Buxoro, Xiva, Shahrisabz, Toshkent\n" +
+                        $"• **Tog' va Tabiat:** Zomin, Amirsoy, Chorvoq, Chimgan, Orol dengizi (Mo'ynoq)\n" +
+                        $"• **Milliy hunarmandchilik & Taomlar:** Qo'qon, Rishton, Marg'ilon, Chust, mashhur palovxonalar\n" +
+                        $"• **Logistika:** Afrosiyob poyezdlari, taksi narxlari, mehmonxonalar va byudjet hisob-kitobi.\n\n" +
+                        $"Quyidagi mavzular bo'yicha savol berishingiz mumkin:";
             }
             else
             {
-                reply = $"### 🏛️ **SAFAR AI Insights**\n\n" +
-                        $"Regarding your query: *\"{request.Message}\"*\n\n" +
+                reply = $"### 🏛️ **SAFAR AI Guide**\n\n" +
+                        $"Regarding your query: *\"{rawMsg}\"*\n\n" +
                         $"Uzbekistan is a treasure trove of Silk Road wonders spanning all 14 provinces. Whether you are curious about historical architecture (Registan, Kalyan Minaret, Ichan-Kala), outdoor adventures (Tian Shan, Zaamin, Aral Sea), or local traditions (Bazaar etiquette, Plov centers), I am here to help.\n\n" +
-                        $"Would you like detailed recommendations on destinations, schedules, or logistics?";
+                        $"Select any of the suggestions below or ask another question!";
             }
         }
 
