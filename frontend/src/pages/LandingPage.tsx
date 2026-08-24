@@ -111,14 +111,14 @@ export const LandingPage: React.FC<LandingPageProps> = ({
     },
     {
       name: 'Gur-e-Amir Mausoleum',
-      desc: 'The resting place of Amir Timur (Tamerlane) crowned by a 64-ribbed azure fluted dome and exquisite dark green jade cenotaph.',
+      desc: 'The resting place of Amir Timur crowned by a 64-ribbed azure fluted dome and exquisite dark green jade cenotaph.',
       tag: 'Imperial Tomb',
       price: '40,000 UZS',
       img: 'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?auto=format&fit=crop&w=800&q=80'
     },
     {
       name: 'Shah-i-Zinda Necropolis',
-      desc: 'A breathtaking royal avenue of mausoleums boasting the finest sapphire, turquoise, and cobalt glazed majolica tilework on Earth.',
+      desc: 'A breathtaking royal avenue of mausoleums boasting the finest sapphire, turquoise, and cobalt glazed majolica tilework.',
       tag: 'Avenue of Royal Tombs',
       price: '40,000 UZS',
       img: 'https://images.unsplash.com/photo-1589182373726-e4f658ab50f0?auto=format&fit=crop&w=800&q=80'
@@ -126,59 +126,29 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   ];
 
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--bg-primary)', color: '#fff', display: 'flex', flexDirection: 'column' }}>
+    <div className="landing-page-root">
       {/* Standalone Landing Navbar */}
-      <nav style={{
-        height: '80px',
-        padding: '0 48px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        borderBottom: '1px solid var(--border-subtle)',
-        background: 'rgba(7, 13, 30, 0.9)',
-        backdropFilter: 'blur(20px)',
-        position: 'sticky',
-        top: 0,
-        zIndex: 100
-      }}>
+      <nav className="landing-navbar">
         {/* Brand */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer' }}>
-          <div style={{
-            width: '42px',
-            height: '42px',
-            borderRadius: '12px',
-            background: 'linear-gradient(135deg, var(--accent-turquoise), var(--accent-gold))',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            boxShadow: '0 0 15px rgba(0, 168, 150, 0.4)'
-          }}>
-            <Navigation size={24} color="#070D1E" />
+        <div className="landing-brand" onClick={onStartPlanning}>
+          <div className="landing-brand-icon">
+            <Navigation size={20} color="#070D1E" />
           </div>
           <div>
-            <div style={{ fontSize: '20px', fontWeight: 800, letterSpacing: '0.04em', color: '#fff', display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <div className="landing-brand-title">
               SAFAR <span style={{ color: 'var(--accent-turquoise)' }}>AI</span>
             </div>
-            <div style={{ fontSize: '11px', color: 'var(--text-gold)', fontWeight: 600 }}>Uzbekistan Smart Travel</div>
+            <div className="landing-brand-subtitle">Uzbekistan Smart Travel</div>
           </div>
         </div>
 
         {/* Right Menu */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+        <div className="landing-nav-actions">
           {/* Language Selector */}
           <select
             value={currentLanguage}
             onChange={(e) => setLanguage(e.target.value as any)}
-            style={{
-              background: 'rgba(255,255,255,0.06)',
-              color: '#fff',
-              border: '1px solid var(--border-subtle)',
-              padding: '6px 12px',
-              borderRadius: 'var(--radius-full)',
-              fontSize: '13px',
-              cursor: 'pointer',
-              outline: 'none'
-            }}
+            className="landing-lang-select"
           >
             {languages.map((l) => (
               <option key={l.code} value={l.code} style={{ background: '#0D1630' }}>
@@ -189,131 +159,79 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
           <button
             onClick={onOpenLogin}
-            className="btn-secondary"
-            style={{ padding: '8px 18px', fontSize: '13px' }}
+            className="btn-secondary landing-sign-btn"
           >
             Sign In
           </button>
 
           <button
             onClick={onStartPlanning}
-            className="btn-primary"
-            style={{ padding: '8px 20px', fontSize: '13px' }}
+            className="btn-primary landing-app-btn"
           >
-            <Sparkles size={15} />
-            <span>Open Web App</span>
+            <Sparkles size={14} />
+            <span>Open App</span>
           </button>
         </div>
       </nav>
 
       {/* Main Landing Content Container */}
-      <main style={{ maxWidth: '1280px', margin: '0 auto', width: '100%', padding: '48px 24px', display: 'flex', flexDirection: 'column', gap: '80px' }}>
+      <main className="landing-main-container">
         {/* Hero Section with WebGL Silk Road Shader */}
-        <section style={{
-          position: 'relative',
-          borderRadius: 'var(--radius-xl)',
-          background: 'linear-gradient(135deg, rgba(13, 22, 48, 0.85), rgba(7, 13, 30, 0.9))',
-          border: '1px solid var(--border-active)',
-          padding: '80px 56px',
-          overflow: 'hidden',
-          boxShadow: '0 20px 60px rgba(0, 0, 0, 0.6)'
-        }}>
+        <section className="landing-hero-section">
           {/* Interactive WebGL Shader Canvas Background */}
-          <SilkRoadShader style={{ opacity: 0.65, borderRadius: 'var(--radius-xl)' }} />
+          <SilkRoadShader style={{ opacity: 0.65, borderRadius: 'inherit' }} />
 
           {/* Ambient Glows */}
-          <div style={{
-            position: 'absolute',
-            top: '-20%',
-            right: '-10%',
-            width: '500px',
-            height: '500px',
-            borderRadius: '50%',
-            background: 'radial-gradient(circle, rgba(0, 168, 150, 0.3) 0%, transparent 70%)',
-            filter: 'blur(50px)',
-            pointerEvents: 'none'
-          }} />
-          <div style={{
-            position: 'absolute',
-            bottom: '-20%',
-            left: '-10%',
-            width: '450px',
-            height: '450px',
-            borderRadius: '50%',
-            background: 'radial-gradient(circle, rgba(212, 175, 55, 0.2) 0%, transparent 70%)',
-            filter: 'blur(50px)',
-            pointerEvents: 'none'
-          }} />
+          <div className="landing-hero-glow-1" />
+          <div className="landing-hero-glow-2" />
 
-          <div style={{ maxWidth: '780px', position: 'relative', zIndex: 2 }}>
-            <div className="badge-gold" style={{ marginBottom: '20px' }}>
-              <Sparkles size={14} /> AI-Powered Smart Tourism
+          <div className="landing-hero-content">
+            <div className="badge-gold landing-hero-badge">
+              <Sparkles size={12} />
+              <span>AI-POWERED SMART TOURISM</span>
             </div>
 
-            <h1 style={{
-              fontSize: '56px',
-              lineHeight: 1.15,
-              color: '#FFFFFF',
-              marginBottom: '20px',
-              fontWeight: 800
-            }}>
+            <h1 className="landing-hero-title">
               Explore Uzbekistan <br />
-              <span style={{
-                background: 'linear-gradient(90deg, var(--accent-turquoise), #2EE6D6, var(--accent-gold))',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent'
-              }}>
+              <span className="text-gradient-silk">
                 with Intelligent AI.
               </span>
             </h1>
 
-            <p style={{
-              fontSize: '18px',
-              color: 'var(--text-secondary)',
-              marginBottom: '36px',
-              lineHeight: 1.6,
-              maxWidth: '660px'
-            }}>
-              <strong>“Your AI Guide. Your Language. Your Journey.”</strong> Instant personalized itineraries, conversational audio guides, landmark camera vision, and real-time voice translation across Uzbekistan.
+            <p className="landing-hero-desc">
+              <strong>“Your AI Guide. Your Language. Your Journey.”</strong> Instant personalized itineraries, conversational audio guides, landmark camera vision, and real-time voice translation across all 14 regions of Uzbekistan.
             </p>
 
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px' }}>
-              <button onClick={onStartPlanning} className="btn-primary" style={{ padding: '16px 32px', fontSize: '16px' }}>
-                <Sparkles size={20} />
+            <div className="landing-hero-actions">
+              <button onClick={onStartPlanning} className="btn-primary landing-cta-primary">
+                <Sparkles size={18} />
                 <span>Plan My Trip with AI</span>
-                <ArrowRight size={18} />
+                <ArrowRight size={16} />
               </button>
 
-              <button onClick={onExploreMap} className="btn-secondary" style={{ padding: '16px 28px', fontSize: '16px' }}>
-                <MapPin size={20} color="var(--accent-turquoise)" />
+              <button onClick={onExploreMap} className="btn-secondary landing-cta-secondary">
+                <MapPin size={18} color="var(--accent-turquoise)" />
                 <span>Explore Smart Map</span>
               </button>
             </div>
 
             {/* Quick Metrics */}
-            <div style={{
-              marginTop: '48px',
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))',
-              gap: '24px',
-              borderTop: '1px solid var(--border-subtle)',
-              paddingTop: '28px'
-            }}>
-              <div>
-                <div style={{ fontSize: '28px', fontWeight: 800, color: 'var(--text-turquoise)' }}>2,750+</div>
-                <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Years of Silk Road History</div>
+            <div className="landing-metrics-grid">
+              <div className="landing-metric-item">
+                <div className="landing-metric-val val-turquoise">2,750+</div>
+                <div className="landing-metric-label">Years of History</div>
               </div>
-              <div>
-                <div style={{ fontSize: '28px', fontWeight: 800, color: 'var(--text-gold)' }}>10</div>
-                <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>AI Translation Languages</div>
+              <div className="landing-metric-item">
+                <div className="landing-metric-val val-gold">14</div>
+                <div className="landing-metric-label">Provinces Covered</div>
               </div>
-              <div>
-                <div style={{ fontSize: '28px', fontWeight: 800, color: '#fff' }}>100%</div>
-                <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Real-time GPS Precision</div>
+              <div className="landing-metric-item">
+                <div className="landing-metric-val val-white">10</div>
+                <div className="landing-metric-label">AI Languages</div>
               </div>
-              <div>
-                <div style={{ fontSize: '28px', fontWeight: 800, color: 'var(--accent-azure)' }}>24/7</div>
-                <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Interactive AI Tour Guide</div>
+              <div className="landing-metric-item">
+                <div className="landing-metric-val val-azure">24/7</div>
+                <div className="landing-metric-label">AI Tour Guide</div>
               </div>
             </div>
           </div>
@@ -321,51 +239,43 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
         {/* Feature Matrix Section */}
         <section>
-          <div style={{ textAlign: 'center', marginBottom: '48px' }}>
-            <div className="badge-turquoise" style={{ marginBottom: '12px' }}>
-              <Zap size={14} /> Comprehensive Tourism Suite
+          <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+            <div className="badge-turquoise" style={{ marginBottom: '12px', display: 'inline-flex' }}>
+              <Zap size={13} /> Comprehensive Tourism Suite
             </div>
-            <h2 style={{ fontSize: '36px', color: '#fff' }}>Everything a Tourist Needs in Uzbekistan</h2>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '16px', maxWidth: '620px', margin: '8px auto 0' }}>
+            <h2 className="landing-section-title">Everything a Tourist Needs in Uzbekistan</h2>
+            <p className="landing-section-subtitle">
               No fragmented apps. SAFAR AI integrates smart planning, live navigation, natural audio narration, and camera vision into one seamless platform.
             </p>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: '24px' }}>
+          <div className="landing-features-grid">
             {features.map((f, i) => {
               const Icon = f.icon;
               return (
                 <div
                   key={i}
-                  className="glass-panel"
-                  style={{
-                    padding: '32px',
-                    borderRadius: 'var(--radius-xl)',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    justifyContent: 'space-between',
-                    gap: '20px',
-                    border: `1px solid ${f.border}`
-                  }}
+                  className="glass-panel landing-feature-card"
+                  style={{ border: `1px solid ${f.border}` }}
                 >
                   <div>
                     <div style={{
-                      width: '52px',
-                      height: '52px',
-                      borderRadius: '14px',
+                      width: '46px',
+                      height: '46px',
+                      borderRadius: '12px',
                       background: f.bg,
                       border: `1px solid ${f.border}`,
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
                       color: f.color,
-                      marginBottom: '20px'
+                      marginBottom: '16px'
                     }}>
-                      <Icon size={26} />
+                      <Icon size={22} />
                     </div>
 
-                    <h3 style={{ fontSize: '20px', color: '#fff', marginBottom: '10px', fontWeight: 700 }}>{f.title}</h3>
-                    <p style={{ color: 'var(--text-secondary)', fontSize: '14px', lineHeight: 1.6 }}>{f.desc}</p>
+                    <h3 style={{ fontSize: '17px', color: '#fff', marginBottom: '8px', fontWeight: 700 }}>{f.title}</h3>
+                    <p style={{ color: 'var(--text-secondary)', fontSize: '13px', lineHeight: 1.5 }}>{f.desc}</p>
                   </div>
 
                   <button
@@ -373,16 +283,17 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                     style={{
                       display: 'inline-flex',
                       alignItems: 'center',
-                      gap: '8px',
+                      gap: '6px',
                       color: f.color,
                       fontWeight: 700,
-                      fontSize: '14px',
+                      fontSize: '13px',
                       padding: 0,
+                      marginTop: '12px',
                       alignSelf: 'flex-start'
                     }}
                   >
                     <span>{f.action}</span>
-                    <ArrowRight size={16} />
+                    <ArrowRight size={14} />
                   </button>
                 </div>
               );
@@ -391,29 +302,24 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         </section>
 
         {/* Samarkand MVP Showcase */}
-        <section className="glass-panel" style={{
-          padding: '48px',
-          borderRadius: 'var(--radius-xl)',
-          border: '1px solid var(--border-gold)',
-          background: 'linear-gradient(135deg, rgba(16, 28, 60, 0.9), rgba(10, 17, 40, 0.95))'
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '20px', marginBottom: '32px' }}>
+        <section className="glass-panel landing-showcase-panel">
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px', marginBottom: '24px' }}>
             <div>
-              <div className="badge-gold" style={{ marginBottom: '8px' }}>
-                <Star size={12} /> MVP Launch Showcase
+              <div className="badge-gold" style={{ marginBottom: '8px', display: 'inline-flex' }}>
+                <Star size={12} /> Highlights Showcase
               </div>
-              <h2 style={{ fontSize: '32px', color: '#fff' }}>Samarkand: The Jewel of the Silk Road</h2>
-              <p style={{ color: 'var(--text-secondary)', fontSize: '14px', marginTop: '4px' }}>
+              <h2 style={{ fontSize: '24px', color: '#fff', fontWeight: 800 }}>Samarkand: Jewel of the Silk Road</h2>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '13px', marginTop: '4px' }}>
                 Complete AI models, coordinates, 3D audio guides, and ticketing data loaded for all major Timurid monuments.
               </p>
             </div>
 
-            <button onClick={onExploreMap} className="btn-gold" style={{ padding: '12px 24px' }}>
-              <MapPin size={16} /> Explore on Smart Map
+            <button onClick={onExploreMap} className="btn-gold" style={{ padding: '10px 20px', fontSize: '13px' }}>
+              <MapPin size={15} /> Explore on Map
             </button>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '24px' }}>
+          <div className="landing-landmarks-grid">
             {samarkandLandmarks.map((lm) => (
               <div
                 key={lm.name}
@@ -426,17 +332,17 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   flexDirection: 'column'
                 }}
               >
-                <div style={{ height: '200px', position: 'relative' }}>
+                <div style={{ height: '170px', position: 'relative' }}>
                   <img src={lm.img} alt={lm.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                   <div style={{
                     position: 'absolute',
-                    top: '12px',
-                    left: '12px',
+                    top: '10px',
+                    left: '10px',
                     background: 'rgba(7, 13, 30, 0.85)',
                     backdropFilter: 'blur(8px)',
-                    padding: '4px 10px',
+                    padding: '3px 8px',
                     borderRadius: 'var(--radius-full)',
-                    fontSize: '11px',
+                    fontSize: '10px',
                     fontWeight: 700,
                     color: 'var(--text-gold)',
                     border: '1px solid var(--border-gold)'
@@ -445,10 +351,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   </div>
                 </div>
 
-                <div style={{ padding: '20px', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                <div style={{ padding: '16px', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                   <div>
-                    <h3 style={{ fontSize: '18px', color: '#fff', fontWeight: 800 }}>{lm.name}</h3>
-                    <p style={{ color: 'var(--text-secondary)', fontSize: '13px', lineHeight: 1.6, marginTop: '8px' }}>
+                    <h3 style={{ fontSize: '16px', color: '#fff', fontWeight: 800 }}>{lm.name}</h3>
+                    <p style={{ color: 'var(--text-secondary)', fontSize: '12px', lineHeight: 1.5, marginTop: '6px' }}>
                       {lm.desc}
                     </p>
                   </div>
@@ -457,18 +363,19 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'space-between',
-                    marginTop: '20px',
+                    marginTop: '14px',
                     paddingTop: '12px',
                     borderTop: '1px solid var(--border-subtle)'
                   }}>
-                    <span style={{ fontSize: '13px', color: 'var(--text-turquoise)', fontWeight: 700 }}>
-                      Ticket: {lm.price}
+                    <span style={{ fontSize: '12px', color: 'var(--text-gold)', fontWeight: 700 }}>
+                      🎟️ {lm.price}
                     </span>
                     <button
                       onClick={onStartPlanning}
-                      style={{ color: '#fff', fontSize: '12px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '4px' }}
+                      className="btn-primary"
+                      style={{ padding: '5px 12px', fontSize: '11px', fontWeight: 700 }}
                     >
-                      Visit with AI <ArrowRight size={14} />
+                      Plan Route
                     </button>
                   </div>
                 </div>
@@ -477,52 +384,25 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           </div>
         </section>
 
-        {/* Final CTA Banner */}
-        <section style={{
-          textAlign: 'center',
-          padding: '64px 32px',
-          borderRadius: 'var(--radius-xl)',
-          background: 'linear-gradient(135deg, rgba(0, 168, 150, 0.2), rgba(13, 22, 48, 0.95))',
-          border: '1px solid var(--border-active)'
+        {/* Footer */}
+        <footer style={{
+          borderTop: '1px solid var(--border-subtle)',
+          paddingTop: '24px',
+          paddingBottom: '32px',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: '12px',
+          textAlign: 'center'
         }}>
-          <h2 style={{ fontSize: '36px', color: '#fff', fontWeight: 800 }}>Ready for your journey along the Silk Road?</h2>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '16px', maxWidth: '550px', margin: '12px auto 32px' }}>
-            Join international travelers using SAFAR AI for effortless discovery, voice translation, and smart budgeting.
-          </p>
-
-          <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', flexWrap: 'wrap' }}>
-            <button onClick={onStartPlanning} className="btn-primary" style={{ padding: '16px 36px', fontSize: '16px' }}>
-              <Sparkles size={18} /> Create My Free Itinerary
-            </button>
-            <button onClick={onOpenLogin} className="btn-secondary" style={{ padding: '16px 28px', fontSize: '16px' }}>
-              Sign In to Account
-            </button>
+          <div style={{ fontSize: '16px', fontWeight: 800, color: '#fff' }}>
+            SAFAR <span style={{ color: 'var(--accent-turquoise)' }}>AI</span>
           </div>
-        </section>
+          <p style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+            © 2026 SAFAR AI. The Supreme AI Travel Companion for Uzbekistan.
+          </p>
+        </footer>
       </main>
-
-      {/* Footer */}
-      <footer style={{
-        borderTop: '1px solid var(--border-subtle)',
-        padding: '32px 48px',
-        background: 'rgba(7, 13, 30, 0.95)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        flexWrap: 'wrap',
-        gap: '16px',
-        marginTop: 'auto'
-      }}>
-        <div style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
-          © 2026 SAFAR AI. “Your AI Guide. Your Language. Your Journey.” • Republic of Uzbekistan
-        </div>
-        <div style={{ display: 'flex', gap: '20px', fontSize: '13px', color: 'var(--text-secondary)' }}>
-          <span style={{ cursor: 'pointer' }} onClick={onStartPlanning}>AI Planner</span>
-          <span style={{ cursor: 'pointer' }} onClick={onExploreMap}>Smart Map</span>
-          <span style={{ cursor: 'pointer' }} onClick={onOpenScan}>Vision Scan</span>
-          <span style={{ cursor: 'pointer' }} onClick={onOpenTranslator}>Voice Translator</span>
-        </div>
-      </footer>
     </div>
   );
 };
