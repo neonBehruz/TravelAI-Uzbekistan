@@ -35,7 +35,7 @@ import { AiTripPlan, AiTripActivity } from './types';
 
 const MainLayout: React.FC = () => {
   const { isAuthenticated } = useAuth();
-  const [currentTab, setCurrentTab] = useState<string>('login');
+  const [currentTab, setCurrentTab] = useState<string>('landing');
   const [activePlan, setActivePlan] = useState<AiTripPlan | null>(null);
   const [selectedPlaceId, setSelectedPlaceId] = useState<string>('p1');
   const [routeActivities, setRouteActivities] = useState<AiTripActivity[] | undefined>(undefined);
@@ -58,8 +58,19 @@ const MainLayout: React.FC = () => {
     setCurrentTab('map');
   };
 
-  // If user is not authenticated, ALWAYS render Login / Register page first
-  if (!isAuthenticated || currentTab === 'login') {
+  if (currentTab === 'landing') {
+    return (
+      <LandingPage
+        onStartPlanning={() => handleNavigate(isAuthenticated ? 'dashboard' : 'login')}
+        onExploreMap={() => handleNavigate(isAuthenticated ? 'map' : 'login')}
+        onOpenScan={() => handleNavigate(isAuthenticated ? 'scan-place' : 'login')}
+        onOpenTranslator={() => handleNavigate(isAuthenticated ? 'translator' : 'login')}
+        onOpenLogin={() => handleNavigate('login')}
+      />
+    );
+  }
+
+  if (currentTab === 'login') {
     return (
       <AuthPages
         mode="login"
@@ -79,14 +90,12 @@ const MainLayout: React.FC = () => {
     );
   }
 
-  if (currentTab === 'landing') {
+  if (!isAuthenticated) {
     return (
-      <LandingPage
-        onStartPlanning={() => handleNavigate('dashboard')}
-        onExploreMap={() => handleNavigate('map')}
-        onOpenScan={() => handleNavigate('scan-place')}
-        onOpenTranslator={() => handleNavigate('translator')}
-        onOpenLogin={() => handleNavigate('login')}
+      <AuthPages
+        mode="login"
+        onSwitchMode={(m) => setCurrentTab(m)}
+        onSuccess={() => setCurrentTab('dashboard')}
       />
     );
   }

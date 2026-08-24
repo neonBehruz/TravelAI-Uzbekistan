@@ -13,6 +13,7 @@ import {
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { api } from '../services/api';
+import { SilkRoadShader } from '../components/SilkRoadShader';
 
 interface AuthPagesProps {
   mode: 'login' | 'register';
@@ -86,21 +87,24 @@ export const AuthPages: React.FC<AuthPagesProps> = ({ mode, onSwitchMode, onSucc
       language: res.language,
       role: res.role as any
     });
-    setLoading(false);
     onSuccess();
+    setLoading(false);
   };
 
   return (
     <div style={{
       minHeight: '100vh',
-      width: '100%',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      background: 'radial-gradient(circle at 50% 20%, rgba(0, 168, 150, 0.15) 0%, transparent 60%), radial-gradient(circle at 80% 80%, rgba(212, 175, 55, 0.1) 0%, transparent 50%), var(--bg-primary)',
       padding: '24px',
-      position: 'relative'
+      position: 'relative',
+      overflow: 'hidden',
+      backgroundColor: '#070D1E'
     }}>
+      {/* Full-Screen WebGL Silk Road Shader Background */}
+      <SilkRoadShader style={{ opacity: 0.75, zIndex: 0 }} />
+
       {/* Top Bar for Language Switcher */}
       <div style={{
         position: 'absolute',
@@ -108,7 +112,8 @@ export const AuthPages: React.FC<AuthPagesProps> = ({ mode, onSwitchMode, onSucc
         right: '24px',
         display: 'flex',
         alignItems: 'center',
-        gap: '8px'
+        gap: '8px',
+        zIndex: 2
       }}>
         <Globe size={16} color="var(--accent-turquoise)" />
         <select
@@ -141,7 +146,9 @@ export const AuthPages: React.FC<AuthPagesProps> = ({ mode, onSwitchMode, onSucc
         border: '1px solid var(--border-active)',
         boxShadow: '0 25px 70px rgba(0,0,0,0.7)',
         background: 'rgba(13, 22, 48, 0.85)',
-        backdropFilter: 'blur(24px)'
+        backdropFilter: 'blur(24px)',
+        position: 'relative',
+        zIndex: 2
       }}>
         {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: '28px' }}>
