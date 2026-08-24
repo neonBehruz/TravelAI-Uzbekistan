@@ -20,7 +20,7 @@ import {
 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
-import { useLocation } from '../context/LocationContext';
+import { useLocation, CITIES } from '../context/LocationContext';
 
 interface SidebarProps {
   currentTab: string;
@@ -98,14 +98,28 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentTab, onSelectTab }) => 
         alignItems: 'center',
         gap: '10px'
       }}>
-        <div style={{ position: 'relative', width: '10px', height: '10px', flexShrink: 0 }}>
-          <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: 'var(--accent-turquoise)' }} />
-          <div className="radar-ping" />
+        <div style={{
+          position: 'relative',
+          width: '10px',
+          height: '10px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          flexShrink: 0
+        }}>
+          <span style={{
+            width: '8px',
+            height: '8px',
+            borderRadius: '50%',
+            backgroundColor: '#10B981',
+            boxShadow: '0 0 8px #10B981',
+            display: 'block'
+          }} />
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: '10px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700 }}>Active Location</div>
-          <div style={{ fontSize: '12px', fontWeight: 600, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-            {location.city} • Registan
+          <div style={{ fontSize: '10px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 800, letterSpacing: '0.04em' }}>Active Location</div>
+          <div style={{ fontSize: '12px', fontWeight: 700, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            {location.city} • {CITIES[location.city]?.region || 'Uzbekistan'}
           </div>
         </div>
       </div>
