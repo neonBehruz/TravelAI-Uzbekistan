@@ -517,21 +517,33 @@ export const api = {
     };
   },
 
-  async chatWithAi(message: string, language: string = 'en', contextPlace?: string) {
+  async chatWithAi(
+    message: string,
+    language: string = 'en',
+    contextPlace?: string,
+    persona: string = 'guide',
+    history?: { role: string; content: string }[]
+  ) {
     try {
       const res = await fetch(`${API_BASE_URL}/ai/chat`, {
         method: 'POST',
         headers: getHeaders(),
-        body: JSON.stringify({ message, language, contextPlaceName: contextPlace })
+        body: JSON.stringify({
+          message,
+          language,
+          contextPlaceName: contextPlace,
+          persona,
+          history
+        })
       });
       if (res.ok) return await res.json();
     } catch (e) {
       console.warn('API chat error:', e);
     }
     return {
-      reply: `As your personal SAFAR AI guide in Samarkand: "${message}". Registan Square, Gur-e-Amir, and Shah-i-Zinda are stunning right now. Let me know if you need walking directions, ticket prices, or local plov recommendations!`,
+      reply: `### 🏛️ **SAFAR AI Gidi**\n\nSizning savolingiz: *"${message}"*\n\nO'zbekistonning barcha 14 ta viloyati bo'yicha tarixiy obidalar, muzeylar, mazali milliy taomlar, poyezdlar va xarajatlar haqida batafsil ma'lumot berishga tayyorman!`,
       language,
-      suggestedFollowUps: ['What are the ticket prices for Registan?', 'Where can I eat Samarkand Osh?', 'Show me nearby photo spots']
+      suggestedFollowUps: ['Samarqand va Buxoroga 3 kunlik marshrut', 'Eng mazali Samarqand oshi qayerda?', 'Toshkent metropoliteni tarixi']
     };
   },
 

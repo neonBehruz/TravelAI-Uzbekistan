@@ -57,11 +57,15 @@ public record AiTripPlanResponseDto(
     List<AiTripDayDto> Days
 );
 
+public record AiChatMessageDto(string Role, string Content);
+
 public record AiChatRequestDto(
     string Message,
     string Language = "en",
     string? ContextPlaceName = null,
-    Guid? ConversationId = null
+    Guid? ConversationId = null,
+    string? Persona = "guide",
+    List<AiChatMessageDto>? History = null
 );
 
 public record AiChatResponseDto(
