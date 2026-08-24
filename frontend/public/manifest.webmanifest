@@ -1,0 +1,58 @@
+{
+  "name": "SAFAR AI — O'zbekiston Sayyohlik Bələdçisi",
+  "short_name": "SAFAR AI",
+  "description": "O'zbekiston bo'ylab AI aqlli bələdçi, GPS xarita, audio gid, kamera skaneri va ovozli tarjimon ilovasi.",
+  "start_url": "/",
+  "id": "/",
+  "display": "standalone",
+  "display_override": ["standalone", "window-controls-overlay"],
+  "orientation": "portrait",
+  "background_color": "#070D1E",
+  "theme_color": "#070D1E",
+  "categories": ["travel", "navigation", "lifestyle", "productivity"],
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/favicon.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Aqlli Xarita (GPS)",
+      "short_name": "Xarita",
+      "description": "Sayohat xaritasi va yaqin obidalarni kashf qiling",
+      "url": "/#map",
+      "icons": [{ "src": "/favicon.svg", "sizes": "192x192" }]
+    },
+    {
+      "name": "AI Vision Skaner",
+      "short_name": "Skaner",
+      "description": "Tarixiy obidalarni kamera orqali tanish",
+      "url": "/#scan-place",
+      "icons": [{ "src": "/favicon.svg", "sizes": "192x192" }]
+    },
+    {
+      "name": "Ovozli Tarjimon",
+      "short_name": "Tarjimon",
+      "description": "10 tilda real-vaqt ovozli tarjima",
+      "url": "/#translator",
+      "icons": [{ "src": "/favicon.svg", "sizes": "192x192" }]
+    },
+    {
+      "name": "24/7 AI Audio Gid",
+      "short_name": "Audio Gid",
+      "description": "Tarix va madaniyat haqida jonli audio hikoyalar",
+      "url": "/#ai-guide",
+      "icons": [{ "src": "/favicon.svg", "sizes": "192x192" }]
+    }
+  ],
+  "prefer_related_applications": false
+}

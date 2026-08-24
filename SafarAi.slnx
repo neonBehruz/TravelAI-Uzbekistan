@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/backend/">
+    <Project Path="backend/SafarAi.Api/SafarAi.Api.csproj" />
+    <Project Path="backend/SafarAi.Core/SafarAi.Core.csproj" />
+    <Project Path="backend/SafarAi.Infrastructure/SafarAi.Infrastructure.csproj" />
+    <Project Path="backend/SafarAi.Services/SafarAi.Services.csproj" />
+  </Folder>
+</Solution>

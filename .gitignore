@@ -1,0 +1,35 @@
+## .NET Core & Visual Studio
+bin/
+obj/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+.vs/
+_ReSharper*/
+
+## Node & Frontend
+node_modules/
+dist/
+dist-ssr/
+*.local
+.npm
+.eslintcache
+
+## OS & IDE
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*~
+
+## Secrets & Local Env
+.env
+.env.local
+.env.development.local
+.env.production.local
+appsettings.Development.json
+appsettings.Production.json
+*.pfx
+*.key
