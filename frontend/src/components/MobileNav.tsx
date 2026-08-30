@@ -1,5 +1,7 @@
 import React from 'react';
-import { Compass, MapPin, Bot, Bookmark, User, Camera, Sparkles } from 'lucide-react';
+import { Compass, MapPin, Bot, Bookmark, User, Camera, Sparkles, ShieldCheck } from 'lucide-react';
+import { useLanguage } from '../context/LanguageContext';
+import { useAuth } from '../context/AuthContext';
 
 interface MobileNavProps {
   currentTab: string;
@@ -7,13 +9,19 @@ interface MobileNavProps {
 }
 
 export const MobileNav: React.FC<MobileNavProps> = ({ currentTab, onSelectTab }) => {
+  const { t } = useLanguage();
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'Admin';
+
   const tabs = [
-    { id: 'dashboard', label: 'Bosh sahifa', icon: Compass },
-    { id: 'map', label: 'Xarita', icon: MapPin },
-    { id: 'scan-place', label: 'AI Skaner', icon: Camera, isCenter: true },
-    { id: 'ai-guide', label: 'AI Gid', icon: Bot, hasPulse: true },
-    { id: 'my-trips', label: 'Rejalarim', icon: Bookmark },
-    { id: 'profile', label: 'Profil', icon: User }
+    { id: 'dashboard', label: t('dashboard'), icon: Compass },
+    { id: 'map', label: t('smartMap'), icon: MapPin },
+    { id: 'plan-trip', label: t('planTrip'), icon: Sparkles, isCenter: true },
+    { id: 'ai-guide', label: t('aiGuide'), icon: Bot, hasPulse: true },
+    ...(isAdmin
+      ? [{ id: 'admin', label: 'Admin', icon: ShieldCheck }]
+      : [{ id: 'my-trips', label: t('myTrips'), icon: Bookmark }]),
+    { id: 'profile', label: t('profile'), icon: User }
   ];
 
   const handleTabClick = (tabId: string) => {
@@ -68,4 +76,3 @@ export const MobileNav: React.FC<MobileNavProps> = ({ currentTab, onSelectTab })
     </nav>
   );
 };
-

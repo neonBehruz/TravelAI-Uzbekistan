@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { LanguageProvider } from './context/LanguageContext';
 import { LocationProvider } from './context/LocationContext';
@@ -29,44 +29,124 @@ import { BazaarCalculatorPage } from './pages/BazaarCalculatorPage';
 import { GastronomyPlovPage } from './pages/GastronomyPlovPage';
 import { TransportTrainPage } from './pages/TransportTrainPage';
 import { EmergencySosPage } from './pages/EmergencySosPage';
+import { HotelsStaysPage } from './pages/HotelsStaysPage';
+import { BudgetTrackerPage } from './pages/BudgetTrackerPage';
+import { WeatherSeasonsPage } from './pages/WeatherSeasonsPage';
+import { TravelPracticalGuidePage } from './pages/TravelPracticalGuidePage';
+import { VirtualTour360Page } from './pages/VirtualTour360Page';
+import { ArtisanSouvenirsPage } from './pages/ArtisanSouvenirsPage';
 
 import { MobileSimulatorShell } from './components/MobileSimulatorShell';
+import { StartupAnimation } from './components/StartupAnimation';
 import { AiTripPlan, AiTripActivity } from './types';
 
+const parseHash = () => {
+  const hash = (typeof window !== 'undefined' ? window.location.hash : '').replace(/^#\/?/, '');
+  if (!hash) return { tab: '', params: {} as Record<string, string> };
+  const [tabPart, queryPart] = hash.split('?');
+  const params: Record<string, string> = {};
+  if (queryPart) {
+    const searchParams = new URLSearchParams(queryPart);
+    searchParams.forEach((value, key) => {
+      params[key] = value;
+    });
+  }
+  return { tab: tabPart || '', params };
+};
+
 const MainLayout: React.FC = () => {
-  const { isAuthenticated } = useAuth();
-  const [currentTab, setCurrentTab] = useState<string>('landing');
+  const { isAuthenticated, user } = useAuth();
+  const [showIntro, setShowIntro] = useState<boolean>(() => {
+    return !sessionStorage.getItem('safar_intro_shown');
+  });
+
+  const [currentTab, setCurrentTab] = useState<string>(() => {
+    const initial = parseHash();
+    if (initial.tab) return initial.tab;
+    return 'landing';
+  });
+
   const [activePlan, setActivePlan] = useState<AiTripPlan | null>(null);
-  const [selectedPlaceId, setSelectedPlaceId] = useState<string>('p1');
+  const [selectedPlaceId, setSelectedPlaceId] = useState<string>(() => {
+    return parseHash().params.id || 'p1';
+  });
   const [routeActivities, setRouteActivities] = useState<AiTripActivity[] | undefined>(undefined);
 
-  const handleNavigate = (tab: string, params?: any) => {
+  const handleNavigate = useCallback((tab: string, params?: any, replace = false) => {
+    let targetTab = tab;
+    if (targetTab === 'admin' && user?.role !== 'Admin') {
+      targetTab = 'dashboard';
+    }
     if (params?.id) {
       setSelectedPlaceId(params.id);
     }
-    setCurrentTab(tab);
+    setCurrentTab(targetTab);
+
+    const queryStr = params?.id ? `?id=${params.id}` : '';
+    const newHash = `#${targetTab}${queryStr}`;
+    if (window.location.hash !== newHash) {
+      if (replace) {
+        window.history.replaceState({ tab: targetTab, params }, '', newHash);
+      } else {
+        window.history.pushState({ tab: targetTab, params }, '', newHash);
+      }
+    }
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [user?.role]);
+
+  useEffect(() => {
+    const onLocationChange = () => {
+      const { tab, params } = parseHash();
+      if (tab) {
+        if (params.id) {
+          setSelectedPlaceId(params.id);
+        }
+        setCurrentTab(tab);
+      } else {
+        setCurrentTab('landing');
+      }
+    };
+
+    window.addEventListener('popstate', onLocationChange);
+    window.addEventListener('hashchange', onLocationChange);
+
+    // If no hash currently exists (initial visit via root link), default to #landing
+    if (!window.location.hash) {
+      window.history.replaceState({ tab: 'landing' }, '', '#landing');
+    }
+
+    return () => {
+      window.removeEventListener('popstate', onLocationChange);
+      window.removeEventListener('hashchange', onLocationChange);
+    };
+  }, []);
+
+  const handleIntroComplete = () => {
+    sessionStorage.setItem('safar_intro_shown', 'true');
+    setShowIntro(false);
   };
 
   const handlePlanGenerated = (plan: AiTripPlan) => {
     setActivePlan(plan);
-    setCurrentTab('trip-result');
+    handleNavigate('trip-result');
   };
 
   const handleOpenMapWithRoute = (activities: AiTripActivity[]) => {
     setRouteActivities(activities);
-    setCurrentTab('map');
+    handleNavigate('map');
   };
 
   if (currentTab === 'landing') {
     return (
-      <LandingPage
-        onStartPlanning={() => handleNavigate(isAuthenticated ? 'dashboard' : 'login')}
-        onExploreMap={() => handleNavigate(isAuthenticated ? 'map' : 'login')}
-        onOpenScan={() => handleNavigate(isAuthenticated ? 'scan-place' : 'login')}
-        onOpenTranslator={() => handleNavigate(isAuthenticated ? 'translator' : 'login')}
-        onOpenLogin={() => handleNavigate('login')}
-      />
+      <>
+        {showIntro && <StartupAnimation onComplete={handleIntroComplete} />}
+        <LandingPage
+          onStartPlanning={() => handleNavigate(isAuthenticated ? 'dashboard' : 'login')}
+          onExploreMap={() => handleNavigate(isAuthenticated ? 'map' : 'login')}
+          onOpenLogin={() => handleNavigate('login')}
+          onOpenRegister={() => handleNavigate('register')}
+        />
+      </>
     );
   }
 
@@ -74,8 +154,9 @@ const MainLayout: React.FC = () => {
     return (
       <AuthPages
         mode="login"
-        onSwitchMode={(m) => setCurrentTab(m)}
-        onSuccess={() => setCurrentTab('dashboard')}
+        onSwitchMode={(m) => handleNavigate(m)}
+        onSuccess={() => handleNavigate('dashboard')}
+        onBack={() => handleNavigate('landing')}
       />
     );
   }
@@ -84,8 +165,9 @@ const MainLayout: React.FC = () => {
     return (
       <AuthPages
         mode="register"
-        onSwitchMode={(m) => setCurrentTab(m)}
-        onSuccess={() => setCurrentTab('onboarding')}
+        onSwitchMode={(m) => handleNavigate(m)}
+        onSuccess={() => handleNavigate('onboarding')}
+        onBack={() => handleNavigate('landing')}
       />
     );
   }
@@ -94,24 +176,32 @@ const MainLayout: React.FC = () => {
     return (
       <AuthPages
         mode="login"
-        onSwitchMode={(m) => setCurrentTab(m)}
-        onSuccess={() => setCurrentTab('dashboard')}
+        onSwitchMode={(m) => handleNavigate(m)}
+        onSuccess={() => handleNavigate('dashboard')}
+        onBack={() => handleNavigate('landing')}
       />
     );
   }
 
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
   return (
     <div className="app-container">
-      {/* Desktop Left Sidebar */}
-      <Sidebar currentTab={currentTab} onSelectTab={(tab) => handleNavigate(tab)} />
+      {/* Desktop Left Sidebar & Mobile Drawer */}
+      <Sidebar
+        currentTab={currentTab}
+        onSelectTab={(tab) => handleNavigate(tab)}
+        isMobileOpen={isMobileMenuOpen}
+        onCloseMobile={() => setIsMobileMenuOpen(false)}
+      />
 
       {/* Main Content Area */}
       <div className="app-main">
         {/* Sticky Header */}
         <Header
-          onOpenScan={() => handleNavigate('scan-place')}
           onOpenPlanner={() => handleNavigate('plan-trip')}
-          onOpenTranslator={() => handleNavigate('translator')}
+          onOpenAdmin={() => handleNavigate('admin')}
+          onToggleMobileMenu={() => setIsMobileMenuOpen((prev) => !prev)}
         />
 
         {/* Viewport Content */}
@@ -154,6 +244,8 @@ const MainLayout: React.FC = () => {
 
           {currentTab === 'gastronomy' && <GastronomyPlovPage onOpenMap={() => handleNavigate('map')} />}
 
+          {currentTab === 'hotels' && <HotelsStaysPage />}
+
           {currentTab === 'transport' && <TransportTrainPage />}
 
           {currentTab === 'sos' && <EmergencySosPage />}
@@ -186,6 +278,12 @@ const MainLayout: React.FC = () => {
               }}
             />
           )}
+
+          {currentTab === 'budget-tracker' && <BudgetTrackerPage />}
+          {currentTab === 'weather-seasons' && <WeatherSeasonsPage />}
+          {currentTab === 'practical-guide' && <TravelPracticalGuidePage />}
+          {currentTab === 'virtual-tour' && <VirtualTour360Page />}
+          {currentTab === 'artisan-crafts' && <ArtisanSouvenirsPage />}
 
           {currentTab === 'profile' && <ProfilePage />}
 

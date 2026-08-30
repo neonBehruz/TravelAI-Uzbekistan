@@ -1,30 +1,63 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   MapPin,
   Sparkles,
-  Camera,
-  Languages,
+  LogOut,
   SunMedium,
-  Globe
+  Globe,
+  Crown,
+  Menu
 } from 'lucide-react';
-import { useLocation, CITIES } from '../context/LocationContext';
+import { useLocation, CITIES, CITY_WEATHER_DATA } from '../context/LocationContext';
 import { useLanguage } from '../context/LanguageContext';
+import { useAuth } from '../context/AuthContext';
 import { UzbekFlag } from './UzbekFlag';
+import { signalRService } from '../services/signalr';
+import { LiveTouristSignal } from '../types';
 
 interface HeaderProps {
-  onOpenScan: () => void;
   onOpenPlanner: () => void;
-  onOpenTranslator: () => void;
+  onOpenAdmin?: () => void;
+  onToggleMobileMenu?: () => void;
 }
 
-export const Header: React.FC<HeaderProps> = ({ onOpenScan, onOpenPlanner, onOpenTranslator }) => {
+export const Header: React.FC<HeaderProps> = ({
+  onOpenPlanner,
+  onOpenAdmin,
+  onToggleMobileMenu
+}) => {
   const { location, setManualCity } = useLocation();
-  const { currentLanguage, setLanguage, languages } = useLanguage();
+  const { currentLanguage, setLanguage, languages, t } = useLanguage();
+  const { user, logout } = useAuth();
+  const isAdmin = user?.role === 'Admin';
+  const [liveStats, setLiveStats] = useState<LiveTouristSignal | null>(null);
+
+  const activeWeather = CITY_WEATHER_DATA[location.city] || { tempC: 30, condition: 'Musaffo quyoshli' };
+
+  useEffect(() => {
+    signalRService.startConnection();
+    const unsub = signalRService.onLiveStats((signal) => {
+      setLiveStats(signal);
+    });
+    return () => {
+      unsub();
+    };
+  }, []);
 
   return (
     <header className="app-header">
       {/* City Switcher & GPS Status */}
       <div className="header-left-bar">
+        {onToggleMobileMenu && (
+          <button
+            onClick={onToggleMobileMenu}
+            className="mobile-menu-toggle-btn"
+            title="Menyuni ochish"
+          >
+            <Menu size={20} color="var(--accent-turquoise)" />
+          </button>
+        )}
+
         <div className="city-selector-pill">
           <UzbekFlag size={18} />
           <MapPin size={14} color="var(--accent-turquoise)" />
@@ -39,7 +72,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenScan, onOpenPlanner, onOpe
             }}
             className="city-select-dropdown"
           >
-            {Object.entries(CITIES).map(([cityName, info]) => (
+            {Object.entries(CITIES).map(([cityName]) => (
               <option key={cityName} value={cityName}>
                 {cityName} {cityName === 'Samarkand' ? '(MVP)' : ''}
               </option>
@@ -48,10 +81,31 @@ export const Header: React.FC<HeaderProps> = ({ onOpenScan, onOpenPlanner, onOpe
         </div>
 
         {/* Live Weather Badge */}
-        <div className="weather-badge">
+        <div className="weather-badge" title={`Ob-havo: ${activeWeather.tempC}°C • ${activeWeather.condition} • ${location.city}`}>
           <SunMedium size={14} color="var(--accent-gold)" />
-          <span>28°C • {location.city}</span>
+          <span>{activeWeather.tempC}°C</span>
         </div>
+
+        {/* Live WebSocket SignalR Pulse Badge */}
+        <div
+          className="badge-live-pulse"
+          title={liveStats ? `Oxirgi harakat: ${liveStats.action} (${liveStats.activeTouristsCount} sayyoh faol)` : 'SignalR Real-time Hub ulangan'}
+        >
+          <span className="live-dot"></span>
+          <span className="live-pulse-text">{liveStats ? `${liveStats.activeTouristsCount}` : 'Live'}</span>
+        </div>
+
+        {/* Exclusive Header Badge if Admin */}
+        {isAdmin && onOpenAdmin && (
+          <button
+            onClick={onOpenAdmin}
+            className="admin-portal-header-pill"
+            title="Admin Boshqaruv Paneliga o'tish"
+          >
+            <Crown size={14} color="#FFD700" />
+            <span className="admin-pill-text">ADMIN</span>
+          </button>
+        )}
       </div>
 
       {/* Right Controls */}
@@ -65,8 +119,8 @@ export const Header: React.FC<HeaderProps> = ({ onOpenScan, onOpenPlanner, onOpe
             className="language-select-dropdown"
           >
             {languages.map((l) => (
-              <option key={l.code} value={l.code}>
-                {l.code.toUpperCase()} - {l.name}
+              <option key={l.code} value={l.code} style={{ background: '#0D1630', color: '#fff' }}>
+                {l.name}
               </option>
             ))}
           </select>
@@ -75,30 +129,25 @@ export const Header: React.FC<HeaderProps> = ({ onOpenScan, onOpenPlanner, onOpe
         {/* Desktop Quick Actions (hidden on mobile / phone frame) */}
         <div className="header-desktop-actions">
           <button
-            onClick={onOpenScan}
-            className="btn-secondary"
-            style={{ padding: '8px 14px', fontSize: '13px' }}
+            onClick={logout}
+            className="btn-secondary header-action-btn"
+            title={t('logout')}
+            style={{
+              borderColor: 'rgba(239, 68, 68, 0.35)',
+              background: 'rgba(239, 68, 68, 0.08)'
+            }}
           >
-            <Camera size={15} color="var(--accent-turquoise)" />
-            <span>Scan Landmark</span>
-          </button>
-
-          <button
-            onClick={onOpenTranslator}
-            className="btn-secondary"
-            style={{ padding: '8px 14px', fontSize: '13px' }}
-          >
-            <Languages size={15} color="var(--accent-gold)" />
-            <span>Voice Translator</span>
+            <LogOut size={15} color="#F87171" />
+            <span className="action-btn-label" style={{ color: '#FCA5A5' }}>{t('logout')}</span>
           </button>
 
           <button
             onClick={onOpenPlanner}
-            className="btn-primary"
-            style={{ padding: '8px 16px', fontSize: '13px' }}
+            className="btn-primary header-action-btn-primary"
+            title={t('planMyTrip')}
           >
             <Sparkles size={15} />
-            <span>Plan My Trip</span>
+            <span className="action-btn-label">{t('planMyTrip')}</span>
           </button>
         </div>
       </div>

@@ -12,6 +12,7 @@ import {
   RefreshCw
 } from 'lucide-react';
 import { UzbekFlag } from '../components/UzbekFlag';
+import { useLanguage, LanguageCode } from '../context/LanguageContext';
 
 interface BazaarItem {
   id: string;
@@ -83,7 +84,199 @@ const CURRENCIES = [
   { code: 'KZT', name: 'Kazakh Tenge', symbol: '₸', rateToUzs: 27 }
 ];
 
+const BAZAAR_STRINGS: Partial<Record<LanguageCode, {
+  badge: string;
+  liveRate: string;
+  title: string;
+  subtitle: string;
+  converterTitle: string;
+  foreignCurrency: string;
+  uzsCurrency: string;
+  bargainingTitle: string;
+  selectProduct: string;
+  askingPriceLabel: string;
+  fairPriceLabel: string;
+  suggestedOffer: string;
+  dealPrice: string;
+  youSave: string;
+  bargainingPhrases: string;
+}>> = {
+  uz: {
+    badge: "Markaziy Bank Kurslari",
+    liveRate: "Bugungi Jonli Valyuta",
+    title: "💱 Valyuta & Bozor Savdolashuvchi AI",
+    subtitle: "Siyob va Chorsu bozorlarida ortiqcha to'lamaslik uchun real narxni hisoblang va o'zbek tilida savdolashing!",
+    converterTitle: "Tezkor Valyuta Konvertori",
+    foreignCurrency: "Chet el valyutasi",
+    uzsCurrency: "O'zbekiston So'mi (UZS)",
+    bargainingTitle: "Bozor Savdolashuvchi AI Kalkulyator",
+    selectProduct: "Bozor mahsulotini tanlang:",
+    askingPriceLabel: "Sotuvchi so'ragan narx (UZS):",
+    fairPriceLabel: "Odatdagi adolatli narx:",
+    suggestedOffer: "Tavsiya etilgan boshlang'ich taklif",
+    dealPrice: "Haqiqiy adolatli kelishuv",
+    youSave: "Tejaladigan mablag'",
+    bargainingPhrases: "Bozorda Ishlatiladigan O'zbekcha Iboralar (Ovozli)"
+  },
+  en: {
+    badge: "Central Bank Rates",
+    liveRate: "Live Currency Exchange",
+    title: "💱 Currency & Bazaar Bargaining AI",
+    subtitle: "Calculate fair prices at Chorsu and Siab bazaars, avoid tourist markups, and bargain in Uzbek!",
+    converterTitle: "Live Currency Converter",
+    foreignCurrency: "Foreign Currency",
+    uzsCurrency: "Uzbekistan Som (UZS)",
+    bargainingTitle: "Bazaar Smart Bargaining AI Calculator",
+    selectProduct: "Select souvenir or bazaar item:",
+    askingPriceLabel: "Seller's Asking Price (UZS):",
+    fairPriceLabel: "Typical Fair Market Price:",
+    suggestedOffer: "Suggested Starting Counter-Offer",
+    dealPrice: "Target Fair Deal Price",
+    youSave: "Estimated Savings",
+    bargainingPhrases: "Essential Uzbek Bazaar Phrases (Audio)"
+  },
+  ru: {
+    badge: "Курсы ЦБ Узбекистана",
+    liveRate: "Текущий курс валют",
+    title: "💱 Валюта и ИИ-Торг на Базаре",
+    subtitle: "Узнайте справедливые цены на Сиабском и Чорсу базарах и торгуйтесь на узбекском как местный!",
+    converterTitle: "Быстрый Конвертер Валют",
+    foreignCurrency: "Иностранная валюта",
+    uzsCurrency: "Узбекский сум (UZS)",
+    bargainingTitle: "ИИ-Калькулятор для Торга на Базаре",
+    selectProduct: "Выберите товар или сувенир:",
+    askingPriceLabel: "Цена, названная продавцом (UZS):",
+    fairPriceLabel: "Справедливая рыночная цена:",
+    suggestedOffer: "Рекомендуемое начальное предложение",
+    dealPrice: "Ожидаемая цена сделки",
+    youSave: "Ваша экономия",
+    bargainingPhrases: "Полезные фразы для торга на базаре (Аудио)"
+  },
+  tr: {
+    badge: "Merkez Bankası Kurları",
+    liveRate: "Canlı Döviz Kuru",
+    title: "💱 Döviz & Pazar Pazarlık Yapay Zekası",
+    subtitle: "Çorsu ve Siyob pazarlarında adil fiyatı hesaplayın ve Özbekçe pazarlık yapın!",
+    converterTitle: "Canlı Döviz Çevirici",
+    foreignCurrency: "Yabancı Para Birimi",
+    uzsCurrency: "Özbekistan Somu (UZS)",
+    bargainingTitle: "Pazar Pazarlık AI Hesaplayıcı",
+    selectProduct: "Ürün veya hatıra seçin:",
+    askingPriceLabel: "Satıcının İstediği Fiyat (UZS):",
+    fairPriceLabel: "Normal Piyasa Fiyatı:",
+    suggestedOffer: "Önerilen Başlangıç Teklifi",
+    dealPrice: "Hedef Anlaşma Fiyatı",
+    youSave: "Tasarrufunuz",
+    bargainingPhrases: "Pazarda Kullanılan Özbekçe Cümleler (Sesli)"
+  },
+  de: {
+    badge: "Zentralbankkurse",
+    liveRate: "Live-Wechselkurse",
+    title: "💱 Währung & Basar-Verhandlungs-KI",
+    subtitle: "Berechnen Sie faire Preise auf Basaren in Samarkand und Taschkent und verhandeln Sie auf Usbekisch!",
+    converterTitle: "Live-Währungsrechner",
+    foreignCurrency: "Fremdwährung",
+    uzsCurrency: "Usbekischer Som (UZS)",
+    bargainingTitle: "Basar-Verhandlungsrechner",
+    selectProduct: "Produkt oder Souvenir wählen:",
+    askingPriceLabel: "Geforderter Preis (UZS):",
+    fairPriceLabel: "Typischer Marktpreis:",
+    suggestedOffer: "Empfohlenes Gegenangebot",
+    dealPrice: "Faires Zielangebot",
+    youSave: "Ihre Ersparnis",
+    bargainingPhrases: "Nützliche usbekische Basar-Phrasen (Audio)"
+  },
+  fr: {
+    badge: "Taux Banque Centrale",
+    liveRate: "Taux de change en direct",
+    title: "💱 Devises & Négociation au Bazar par IA",
+    subtitle: "Calculez le juste prix sur les bazars de Samarcande et Tachkent et négociez en ouzbek !",
+    converterTitle: "Convertisseur de Devises",
+    foreignCurrency: "Devise Étrangère",
+    uzsCurrency: "Sum Ouzbek (UZS)",
+    bargainingTitle: "Calculateur de Négociation IA",
+    selectProduct: "Sélectionnez un article :",
+    askingPriceLabel: "Prix demandé par le vendeur (UZS) :",
+    fairPriceLabel: "Prix équitable habituel :",
+    suggestedOffer: "Contre-offre initiale conseillée",
+    dealPrice: "Prix d'accord équitable visé",
+    youSave: "Votre économie estimée",
+    bargainingPhrases: "Phrases utiles au bazar en ouzbek (Audio)"
+  },
+  es: {
+    badge: "Tasas Banco Central",
+    liveRate: "Tipo de cambio en vivo",
+    title: "💱 Moneda y Regateo en el Bazar con IA",
+    subtitle: "¡Calcula precios justos en los bazares de Uzbekistán y regatea en uzbeko!",
+    converterTitle: "Conversor de Moneda en Vivo",
+    foreignCurrency: "Moneda Extranjera",
+    uzsCurrency: "Som Uzbeko (UZS)",
+    bargainingTitle: "Calculadora de Regateo con IA",
+    selectProduct: "Selecciona un artículo o souvenir:",
+    askingPriceLabel: "Precio pedido por el vendedor (UZS):",
+    fairPriceLabel: "Precio justo de mercado:",
+    suggestedOffer: "Contraoferta inicial sugerida",
+    dealPrice: "Precio justo objetivo",
+    youSave: "Ahorro estimado",
+    bargainingPhrases: "Frases útiles para regatear en uzbeko (Audio)"
+  },
+  zh: {
+    badge: "央行实时汇率",
+    liveRate: "实时货币汇率",
+    title: "💱 汇率换算与巴扎智能砍价 AI",
+    subtitle: "在帖木儿故里的巴扎里了解真实公道价格，用乌兹别克语地道砍价！",
+    converterTitle: "实时汇率换算器",
+    foreignCurrency: "外币金额",
+    uzsCurrency: "乌兹别克斯坦苏姆 (UZS)",
+    bargainingTitle: "巴扎智能砍价计算器",
+    selectProduct: "选择特色纪念品或商品：",
+    askingPriceLabel: "商家开价 (UZS)：",
+    fairPriceLabel: "正常市场公道价：",
+    suggestedOffer: "建议起始还价",
+    dealPrice: "合理成交目标价",
+    youSave: "预计节省金额",
+    bargainingPhrases: "巴扎实用乌兹别克语砍价短语（带发音）"
+  },
+  ja: {
+    badge: "中央銀行為替レート",
+    liveRate: "リアルタイム為替",
+    title: "💱 通貨換算＆バザール価格交渉AI",
+    subtitle: "バザールで適正価格を把握し、ウズベク語でスムーズに価格交渉を楽しみましょう！",
+    converterTitle: "リアルタイム通貨コンバーター",
+    foreignCurrency: "外国通貨",
+    uzsCurrency: "ウズベキスタン・スム (UZS)",
+    bargainingTitle: "バザール交渉AIカリキュレーター",
+    selectProduct: "お土産または商品を選択：",
+    askingPriceLabel: "売り手の提示価格 (UZS)：",
+    fairPriceLabel: "適正な市場価格：",
+    suggestedOffer: "おすすめの最初の提示額",
+    dealPrice: "適正な目標合意価格",
+    youSave: "節約可能額",
+    bargainingPhrases: "バザールで役立つウズベク語フレーズ（音声付）"
+  },
+  ko: {
+    badge: "중앙은행 실시간 환율",
+    liveRate: "실시간 환율 정보",
+    title: "💱 환율 계산기 & 바자르 AI 흥정 도우미",
+    subtitle: "우즈베키스탄 전통 시장에서 합리적인 가격을 확인하고 우즈베크어로 흥정해보세요!",
+    converterTitle: "실시간 환율 변환기",
+    foreignCurrency: "외화 금액",
+    uzsCurrency: "우즈베키스탄 숨 (UZS)",
+    bargainingTitle: "바자르 AI 흥정 계산기",
+    selectProduct: "기념품 또는 품목 선택:",
+    askingPriceLabel: "상인이 부른 가격 (UZS):",
+    fairPriceLabel: "통상적인 적정 시장 가격:",
+    suggestedOffer: "추천 시작 제안가",
+    dealPrice: "목표 적정 합의가",
+    youSave: "예상 절약 금액",
+    bargainingPhrases: "바자르 필수 우즈베크어 표현 (오디오)"
+  }
+};
+
 export const BazaarCalculatorPage: React.FC = () => {
+  const { currentLanguage } = useLanguage();
+  const tBazaar = BAZAAR_STRINGS[currentLanguage] || BAZAAR_STRINGS.uz!;
+
   // Currency state
   const [selectedCurrency, setSelectedCurrency] = useState(CURRENCIES[0]);
   const [foreignAmount, setForeignAmount] = useState<string>('100');
@@ -139,29 +332,29 @@ export const BazaarCalculatorPage: React.FC = () => {
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
           <div className="badge-gold">
-            <Coins size={14} /> Markaziy Bank Kurslari
+            <Coins size={14} /> {tBazaar.badge}
           </div>
-          <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Bugungi Jonli Valyuta</span>
+          <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{tBazaar.liveRate}</span>
         </div>
         <h1 style={{ fontSize: '26px', color: '#fff', marginBottom: '6px' }}>
-          💱 Valyuta & Bozor Savdolashuvchi AI
+          {tBazaar.title}
         </h1>
         <p style={{ color: 'var(--text-secondary)', fontSize: '14px', lineHeight: 1.5 }}>
-          Siyob va Chorsu bozorlarida ortiqcha to'lamaslik uchun real narxni hisoblang va o'zbek tilida savdolashing!
+          {tBazaar.subtitle}
         </p>
       </div>
 
       {/* 1. Live Currency Converter */}
       <div className="glass-panel" style={{ padding: '24px', borderRadius: 'var(--radius-lg)' }}>
         <h2 style={{ fontSize: '18px', color: '#fff', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <Calculator size={18} color="var(--accent-gold)" /> Tezkor Valyuta Konvertori
+          <Calculator size={18} color="var(--accent-gold)" /> {tBazaar.converterTitle}
         </h2>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '16px', alignItems: 'center' }}>
           {/* Foreign Input */}
           <div style={{ background: 'rgba(255, 255, 255, 0.04)', padding: '16px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-              <label style={{ fontSize: '12px', color: 'var(--text-secondary)', fontWeight: 600 }}>Chet el valyutasi</label>
+              <label style={{ fontSize: '12px', color: 'var(--text-secondary)', fontWeight: 600 }}>{tBazaar.foreignCurrency}</label>
               <select
                 value={selectedCurrency.code}
                 onChange={(e) => {
@@ -197,79 +390,36 @@ export const BazaarCalculatorPage: React.FC = () => {
           <div style={{ background: 'rgba(0, 168, 150, 0.08)', padding: '16px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-active)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
               <UzbekFlag size={16} />
-              <label style={{ fontSize: '12px', color: 'var(--text-turquoise)', fontWeight: 700 }}>O'zbekiston So'mi (UZS)</label>
+              <label style={{ fontSize: '12px', color: 'var(--text-turquoise)', fontWeight: 700 }}>{tBazaar.uzsCurrency}</label>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <input
                 type="text"
                 value={uzsAmount}
                 onChange={(e) => handleUzsChange(e.target.value)}
-                style={{ background: 'transparent', border: 'none', color: '#fff', fontSize: '24px', fontWeight: 800, width: '100%', outline: 'none' }}
+                style={{ background: 'transparent', border: 'none', color: 'var(--accent-turquoise)', fontSize: '24px', fontWeight: 800, width: '100%', outline: 'none' }}
               />
-              <span style={{ fontSize: '16px', fontWeight: 700, color: 'var(--accent-turquoise)' }}>UZS</span>
+              <span style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-secondary)' }}>UZS</span>
             </div>
             <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>
-              Naqd pul & Humo / UzCard to'lovlar
+              O'zbekiston milliy valyutasi
             </div>
           </div>
-        </div>
-
-        {/* Quick Amount Chips */}
-        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginTop: '16px' }}>
-          {[50, 100, 200, 500].map(amt => (
-            <button
-              key={amt}
-              onClick={() => handleForeignChange(amt.toString())}
-              style={{
-                background: 'rgba(255,255,255,0.05)',
-                border: '1px solid var(--border-subtle)',
-                color: 'var(--text-secondary)',
-                padding: '4px 12px',
-                borderRadius: 'var(--radius-full)',
-                fontSize: '12px',
-                fontWeight: 600
-              }}
-            >
-              {selectedCurrency.symbol}{amt}
-            </button>
-          ))}
-          <button
-            onClick={() => handleUzsChange('500000')}
-            style={{
-              background: 'rgba(0, 168, 150, 0.1)',
-              border: '1px solid var(--border-active)',
-              color: 'var(--text-turquoise)',
-              padding: '4px 12px',
-              borderRadius: 'var(--radius-full)',
-              fontSize: '12px',
-              fontWeight: 600
-            }}
-          >
-            500,000 UZS
-          </button>
         </div>
       </div>
 
-      {/* 2. AI Bozor Savdolashuvchi */}
+      {/* 2. Bazaar Bargaining Calculator */}
       <div className="glass-panel" style={{ padding: '24px', borderRadius: 'var(--radius-lg)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', flexWrap: 'wrap', gap: '10px' }}>
-          <div>
-            <h2 style={{ fontSize: '18px', color: '#fff', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <ShoppingBag size={18} color="var(--accent-turquoise)" /> AI Bozor Savdolashuvchi Maslahatchisi
-            </h2>
-            <p style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>Sotuvchi narx aytganda qanday javob berishni hisoblang</p>
-          </div>
-          <div className="badge-turquoise">
-            <Sparkles size={12} /> Aqlli Formula
-          </div>
-        </div>
+        <h2 style={{ fontSize: '18px', color: '#fff', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <ShoppingBag size={18} color="var(--accent-turquoise)" /> {tBazaar.bargainingTitle}
+        </h2>
 
-        {/* Item Selector */}
-        <div style={{ marginBottom: '20px' }}>
-          <label style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '8px', display: 'block', fontWeight: 600 }}>
-            Xarid qilinayotgan mahsulot turi:
+        {/* Item Selector Chips */}
+        <div style={{ marginBottom: '16px' }}>
+          <label style={{ display: 'block', fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '8px' }}>
+            {tBazaar.selectProduct}
           </label>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '8px' }}>
+          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
             {BAZAAR_ITEMS.map((item) => (
               <button
                 key={item.id}
@@ -278,105 +428,113 @@ export const BazaarCalculatorPage: React.FC = () => {
                   setAskingPrice((item.typicalFairPriceUZS * 1.4).toString());
                 }}
                 style={{
-                  padding: '10px 12px',
-                  borderRadius: 'var(--radius-md)',
-                  background: selectedItem.id === item.id ? 'rgba(0, 168, 150, 0.2)' : 'rgba(255,255,255,0.03)',
-                  border: `1px solid ${selectedItem.id === item.id ? 'var(--border-active)' : 'var(--border-subtle)'}`,
-                  textAlign: 'left',
-                  color: selectedItem.id === item.id ? '#fff' : 'var(--text-secondary)',
+                  padding: '6px 14px',
+                  borderRadius: 'var(--radius-full)',
+                  background: selectedItem.id === item.id ? 'var(--accent-turquoise)' : 'rgba(255,255,255,0.05)',
+                  color: selectedItem.id === item.id ? '#070D1E' : '#fff',
+                  border: selectedItem.id === item.id ? 'none' : '1px solid var(--border-subtle)',
+                  fontSize: '12px',
+                  fontWeight: 700,
+                  cursor: 'pointer',
                   transition: 'all 0.2s ease'
                 }}
               >
-                <div style={{ fontSize: '13px', fontWeight: 700 }}>{item.name}</div>
-                <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>O'rtacha: ~{item.typicalFairPriceUZS.toLocaleString('uz-UZ')} UZS</div>
+                {item.name}
               </button>
             ))}
           </div>
         </div>
 
-        {/* Asking Price Input */}
-        <div style={{ marginBottom: '20px', background: 'rgba(255,255,255,0.03)', padding: '16px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)' }}>
-          <label style={{ fontSize: '13px', color: '#fff', fontWeight: 700, display: 'block', marginBottom: '8px' }}>
-            Sotuvchi aytgan narxni kiriting (UZS):
-          </label>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        {/* Calculation Matrix */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px', marginTop: '20px' }}>
+          {/* Asking Price Input */}
+          <div style={{ background: 'rgba(255,255,255,0.02)', padding: '16px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)' }}>
+            <label style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '6px' }}>
+              {tBazaar.askingPriceLabel}
+            </label>
             <input
               type="number"
               value={askingPrice}
               onChange={(e) => setAskingPrice(e.target.value)}
-              placeholder="Masalan: 150000"
-              style={{
-                background: '#0D1630',
-                border: '1px solid var(--border-active)',
-                borderRadius: 'var(--radius-md)',
-                color: '#fff',
-                fontSize: '20px',
-                fontWeight: 800,
-                padding: '10px 16px',
-                flex: 1,
-                outline: 'none'
-              }}
+              style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border-subtle)', borderRadius: '8px', padding: '10px 12px', color: '#fff', fontSize: '18px', fontWeight: 800, outline: 'none' }}
             />
-            <span style={{ fontSize: '15px', color: 'var(--text-gold)', fontWeight: 700 }}>UZS</span>
+            <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '6px' }}>
+              {tBazaar.fairPriceLabel} {selectedItem.typicalFairPriceUZS.toLocaleString('uz-UZ')} UZS
+            </div>
+          </div>
+
+          {/* AI Recommended Start Offer */}
+          <div style={{ background: 'rgba(212, 175, 55, 0.08)', padding: '16px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-gold)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--accent-gold)', fontSize: '12px', fontWeight: 700 }}>
+              <TrendingDown size={14} /> {tBazaar.suggestedOffer}
+            </div>
+            <div style={{ fontSize: '24px', fontWeight: 900, color: 'var(--accent-gold)', marginTop: '8px' }}>
+              {counterOffer.toLocaleString('uz-UZ')} <span style={{ fontSize: '14px' }}>UZS</span>
+            </div>
+            <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>
+              Sotuvchi aytgan narxdan 40% pastroq taklif bering.
+            </div>
+          </div>
+
+          {/* AI Fair Deal Target */}
+          <div style={{ background: 'rgba(0, 168, 150, 0.1)', padding: '16px', borderRadius: 'var(--radius-md)', border: '1px solid var(--accent-turquoise)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--accent-turquoise)', fontSize: '12px', fontWeight: 700 }}>
+              <CheckCircle size={14} /> {tBazaar.dealPrice}
+            </div>
+            <div style={{ fontSize: '24px', fontWeight: 900, color: '#fff', marginTop: '8px' }}>
+              {realisticDeal.toLocaleString('uz-UZ')} <span style={{ fontSize: '14px' }}>UZS</span>
+            </div>
+            <div style={{ fontSize: '11px', color: '#10B981', marginTop: '4px', fontWeight: 700 }}>
+              ✓ {tBazaar.youSave}: {savings.toLocaleString('uz-UZ')} UZS
+            </div>
           </div>
         </div>
 
-        {/* Calculation Result Cards */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px', marginBottom: '20px' }}>
-          <div style={{ background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.3)', padding: '14px', borderRadius: 'var(--radius-md)' }}>
-            <div style={{ fontSize: '11px', color: '#FCA5A5', fontWeight: 600 }}>Sotuvchi aytgan</div>
-            <div style={{ fontSize: '18px', fontWeight: 800, color: '#fff', marginTop: '2px' }}>{parsedAsking.toLocaleString('uz-UZ')} UZS</div>
-            <div style={{ fontSize: '11px', color: '#FCA5A5', marginTop: '4px' }}>Boshlang'ich qimmat narx</div>
-          </div>
-
-          <div style={{ background: 'rgba(212, 175, 55, 0.1)', border: '1px solid var(--border-gold)', padding: '14px', borderRadius: 'var(--radius-md)' }}>
-            <div style={{ fontSize: '11px', color: 'var(--text-gold)', fontWeight: 600 }}>Siz taklif qiling (1-qadam)</div>
-            <div style={{ fontSize: '18px', fontWeight: 800, color: 'var(--text-gold)', marginTop: '2px' }}>{counterOffer.toLocaleString('uz-UZ')} UZS</div>
-            <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>40-50% pasaytirib boshlang</div>
-          </div>
-
-          <div style={{ background: 'rgba(0, 168, 150, 0.12)', border: '1px solid var(--border-active)', padding: '14px', borderRadius: 'var(--radius-md)' }}>
-            <div style={{ fontSize: '11px', color: 'var(--text-turquoise)', fontWeight: 700 }}>Adolatli Kelishuv Narxi</div>
-            <div style={{ fontSize: '20px', fontWeight: 800, color: 'var(--accent-turquoise)', marginTop: '2px' }}>{realisticDeal.toLocaleString('uz-UZ')} UZS</div>
-            <div style={{ fontSize: '11px', color: '#10B981', marginTop: '4px' }}>Tejaladi: ~{savings.toLocaleString('uz-UZ')} UZS</div>
+        {/* Local Expert Tip */}
+        <div style={{ marginTop: '16px', padding: '14px', borderRadius: 'var(--radius-md)', background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border-subtle)', display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
+          <Info size={16} color="var(--accent-gold)" style={{ flexShrink: 0, marginTop: '2px' }} />
+          <div style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
+            <strong style={{ color: '#fff' }}>Mahalliy maslahat:</strong> {selectedItem.tips}
           </div>
         </div>
+      </div>
 
-        {/* Spoken Phrases in Uzbek with Audio */}
-        <div style={{ background: 'rgba(255,255,255,0.03)', padding: '16px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)' }}>
-          <div style={{ fontSize: '13px', color: '#fff', fontWeight: 700, marginBottom: '10px' }}>
-            🗣️ Sotuvchiga aytiladigan o'zbekcha iboralar (Eshiting va takrorlang):
-          </div>
+      {/* 3. Essential Uzbek Bazaar Phrases with Audio */}
+      <div>
+        <h2 style={{ fontSize: '18px', color: '#fff', marginBottom: '14px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <Volume2 size={18} color="var(--accent-turquoise)" /> {tBazaar.bargainingPhrases}
+        </h2>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            {[
-              { uz: `Aka, ${counterOffer.toLocaleString('uz-UZ')} so'mga bering, olaman.`, en: "Brother, give it for this price and I will take it." },
-              { uz: "Oxirgi narxi qancha bo'ladi? Yaxshiroq qilib bering.", en: "What is your best final price? Make a good discount." },
-              { uz: "Ikkita olsam, qanchadan qilib berasiz?", en: "If I take two, how much will you charge?" }
-            ].map((p, idx) => (
-              <div key={idx} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px', background: 'rgba(0,0,0,0.2)', borderRadius: '8px' }}>
-                <div>
-                  <div style={{ fontSize: '13px', fontWeight: 700, color: '#fff' }}>"{p.uz}"</div>
-                  <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>{p.en}</div>
-                </div>
-                <button
-                  onClick={() => speakPhrase(p.uz)}
-                  style={{ background: 'rgba(0, 168, 150, 0.2)', padding: '8px', borderRadius: '50%', color: 'var(--accent-turquoise)' }}
-                  title="Tinglash"
-                >
-                  <Volume2 size={16} />
-                </button>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '12px' }}>
+          {[
+            { uz: "Qanchaga berasiz, aka?", en: "What's your best price, brother?", phonetic: "Qan-cha-ga be-ra-siz, a-ka?" },
+            { uz: "Biroz tushirib bering!", en: "Please give me a small discount!", phonetic: "Bi-roz tu-shi-rib be-ring!" },
+            { uz: "Uchtasini olsam, qancha qilib berasiz?", en: "If I buy three, what's the discount?", phonetic: "Uch-ta-si-ni ol-sam, qan-cha qi-lib be-ra-siz?" },
+            { uz: "Bu haqiqiy ipakmi / qo'l mehnati mi?", en: "Is this genuine silk / handmade?", phonetic: "Bu ha-qi-qiy ipak-mi?" },
+            { uz: "Rahmat, juda chiroyli ekan!", en: "Thank you, it is very beautiful!", phonetic: "Rakh-mat, ju-da chi-roy-li e-kan!" },
+            { uz: "Karta bilan to'lasam bo'ladimi?", en: "Can I pay by card (Uzcard/Humo/Visa)?", phonetic: "Kar-ta bi-lan to'la-sam bo'la-di-mi?" }
+          ].map((phrase, i) => (
+            <div
+              key={i}
+              className="glass-panel"
+              style={{ padding: '14px 16px', borderRadius: 'var(--radius-md)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px' }}
+            >
+              <div>
+                <div style={{ fontSize: '14px', fontWeight: 800, color: '#fff' }}>"{phrase.uz}"</div>
+                <div style={{ fontSize: '11.5px', color: 'var(--text-turquoise)', marginTop: '2px' }}>Talaffuz: {phrase.phonetic}</div>
+                <div style={{ fontSize: '11.5px', color: 'var(--text-muted)', marginTop: '2px' }}>{phrase.en}</div>
               </div>
-            ))}
-          </div>
-        </div>
 
-        {/* Expert Bozor Tips */}
-        <div style={{ marginTop: '16px', display: 'flex', gap: '10px', alignItems: 'flex-start', background: 'rgba(212, 175, 55, 0.05)', padding: '12px 14px', borderRadius: 'var(--radius-md)', border: '1px solid rgba(212, 175, 55, 0.2)' }}>
-          <Info size={18} color="var(--accent-gold)" style={{ flexShrink: 0, marginTop: '2px' }} />
-          <div style={{ fontSize: '12.5px', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
-            <strong style={{ color: '#fff' }}>Gid Maslahati:</strong> {selectedItem.tips} Savdolashish O'zbekiston bozorlarida madaniyatning bir qismi hisoblanadi. Tabassum qiling va do'stona muloqot qiling!
-          </div>
+              <button
+                onClick={() => speakPhrase(phrase.uz)}
+                className="btn-secondary"
+                style={{ width: '34px', height: '34px', padding: 0, borderRadius: '50%', flexShrink: 0 }}
+                title="Ovoz chiqarib eshitish"
+              >
+                <Volume2 size={15} />
+              </button>
+            </div>
+          ))}
         </div>
       </div>
     </div>

@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { LanguageCode, LanguageMeta, SUPPORTED_LANGUAGES, TRANSLATIONS } from '../i18n/translations';
 
+export type { LanguageCode, LanguageMeta };
+
 interface LanguageContextType {
   currentLanguage: LanguageCode;
   languages: LanguageMeta[];
@@ -21,8 +23,9 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   };
 
   const t = (key: string): string => {
-    const dict = TRANSLATIONS[currentLanguage] || TRANSLATIONS.en;
-    return dict[key] || TRANSLATIONS.en[key] || key;
+    if (!key) return '';
+    const dict = (TRANSLATIONS as any)?.[currentLanguage] || TRANSLATIONS?.en || TRANSLATIONS?.uz;
+    return (dict && dict[key]) || TRANSLATIONS?.en?.[key] || TRANSLATIONS?.uz?.[key] || key;
   };
 
   return (

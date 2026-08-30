@@ -24,6 +24,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<AIMessage> AIMessages => Set<AIMessage>();
     public DbSet<UserLocation> UserLocations => Set<UserLocation>();
     public DbSet<TranslationHistory> TranslationHistories => Set<TranslationHistory>();
+    public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

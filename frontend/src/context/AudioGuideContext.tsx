@@ -25,6 +25,8 @@ export const AudioGuideProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     }
     setIsPlaying(false);
     setProgress(0);
+    setCurrentTitle('');
+    setCurrentText('');
   };
 
   const playAudio = (title: string, text: string, langCode: string = 'en') => {
@@ -34,7 +36,15 @@ export const AudioGuideProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     setIsPlaying(true);
 
     if ('speechSynthesis' in window) {
-      const utterance = new SpeechSynthesisUtterance(text);
+      const cleanSpeechText = text
+        .replace(/#{1,6}\s+/g, '')
+        .replace(/\*\*\*([^*]+)\*\*\*/g, '$1')
+        .replace(/\*\*([^*]+)\*\*/g, '$1')
+        .replace(/\*([^*]+)\*/g, '$1')
+        .replace(/`([^`]+)`/g, '$1')
+        .replace(/\*\*/g, '');
+
+      const utterance = new SpeechSynthesisUtterance(cleanSpeechText);
       utterance.rate = 0.95; // Natural conversational pace
       utterance.pitch = 1.0;
 

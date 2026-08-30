@@ -10,52 +10,319 @@ import {
   Globe,
   Server,
   CheckCircle2,
-  RefreshCw
+  RefreshCw,
+  Crown,
+  ShieldAlert,
+  Search,
+  Filter,
+  UserCheck,
+  UserX,
+  Trash2
 } from 'lucide-react';
-import { AdminStats } from '../types';
+import { AdminStats, UserProfile } from '../types';
 import { api } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 
 export const AdminPage: React.FC = () => {
+  const { user } = useAuth();
+  const [activeAdminTab, setActiveAdminTab] = useState<'analytics' | 'users'>('analytics');
   const [stats, setStats] = useState<AdminStats | null>(null);
+  const [users, setUsers] = useState<UserProfile[]>([]);
+  const [userSearch, setUserSearch] = useState('');
+  const [roleFilter, setRoleFilter] = useState<'all' | 'Admin' | 'User'>('all');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function load() {
       setLoading(true);
-      const data = await api.getAdminStats();
-      setStats(data);
-      setLoading(false);
+      try {
+        const [data, usersData] = await Promise.all([
+          api.getAdminStats(),
+          api.getAdminUsers()
+        ]);
+        setStats(data);
+        setUsers(usersData);
+      } catch (err) {
+        console.error('Failed to load admin telemetry:', err);
+      } finally {
+        setLoading(false);
+      }
     }
     load();
   }, []);
 
+  if (user?.role !== 'Admin') {
+    return (
+      <div style={{ padding: '60px 20px', textAlign: 'center', maxWidth: '600px', margin: '0 auto' }}>
+        <div style={{
+          width: '64px',
+          height: '64px',
+          borderRadius: '20px',
+          background: 'rgba(239, 68, 68, 0.15)',
+          border: '1px solid rgba(239, 68, 68, 0.4)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          margin: '0 auto 20px'
+        }}>
+          <ShieldAlert size={32} color="#EF4444" />
+        </div>
+        <h2 style={{ color: '#fff', fontSize: '24px', marginBottom: '10px' }}>Ruxsat Cheklangan (Access Denied)</h2>
+        <p style={{ color: 'var(--text-secondary)', fontSize: '14px', lineHeight: 1.6 }}>
+          Ushbu boshqaruv paneliga kirish faqat tizim Administratorlari uchun ajratilgan.
+        </p>
+      </div>
+    );
+  }
+
   if (!stats || loading) {
     return <div style={{ padding: '40px', textAlign: 'center', color: '#fff' }}>Loading Admin Analytics…</div>;
   }
+
+  const filteredUsers = users.filter((u) => {
+    const matchesSearch = u.name.toLowerCase().includes(userSearch.toLowerCase()) ||
+                          u.email.toLowerCase().includes(userSearch.toLowerCase()) ||
+                          u.country.toLowerCase().includes(userSearch.toLowerCase());
+    const matchesRole = roleFilter === 'all' || u.role === roleFilter;
+    return matchesSearch && matchesRole;
+  });
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '32px', maxWidth: '1200px', margin: '0 auto' }}>
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
         <div>
-          <div className="badge-gold" style={{ marginBottom: '8px' }}>
-            <ShieldCheck size={12} /> Executive Platform Analytics
+          <div className="badge-admin-crown" style={{ marginBottom: '8px' }}>
+            <Crown size={13} color="#FFD700" /> Executive Platform Control
           </div>
           <h1 style={{ fontSize: '32px', color: '#fff' }}>SAFAR AI Admin Portal</h1>
           <p style={{ color: 'var(--text-secondary)', fontSize: '14px', marginTop: '4px' }}>
-            Live monitoring of tourist demographics, AI trip generations, and Silk Road destination engagement.
+            Boshqaruv markazi: Foydalanuvchilar rollari, tizim telemetriyasi va sayyohlar tahlili.
           </p>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <span className="badge-turquoise" style={{ fontSize: '12px' }}>
-            <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--accent-turquoise)' }} />
-            System Healthy
-          </span>
+        {/* Tab Switcher */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(255,255,255,0.05)', padding: '4px', borderRadius: '12px', border: '1px solid var(--border-subtle)' }}>
+          <button
+            onClick={() => setActiveAdminTab('analytics')}
+            style={{
+              padding: '8px 16px',
+              borderRadius: '8px',
+              fontSize: '13px',
+              fontWeight: 700,
+              color: activeAdminTab === 'analytics' ? '#070D1E' : 'var(--text-secondary)',
+              background: activeAdminTab === 'analytics' ? 'var(--accent-gold)' : 'transparent',
+              transition: 'all 0.2s'
+            }}
+          >
+            📊 Analytics & KPIs
+          </button>
+          <button
+            onClick={() => setActiveAdminTab('users')}
+            style={{
+              padding: '8px 16px',
+              borderRadius: '8px',
+              fontSize: '13px',
+              fontWeight: 700,
+              color: activeAdminTab === 'users' ? '#070D1E' : 'var(--text-secondary)',
+              background: activeAdminTab === 'users' ? 'var(--accent-gold)' : 'transparent',
+              transition: 'all 0.2s'
+            }}
+          >
+            👥 Users & Roles ({users.length})
+          </button>
         </div>
       </div>
 
-      {/* Top Metric Cards (6 KPIs) */}
+      {activeAdminTab === 'users' ? (
+        /* Users Management View */
+        <div className="glass-panel" style={{ padding: '24px', borderRadius: 'var(--radius-xl)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px', marginBottom: '20px' }}>
+            <div>
+              <h2 style={{ fontSize: '20px', color: '#fff', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Users size={20} color="var(--accent-gold)" /> Ro'yxatdan O'tgan Foydalanuvchilar
+              </h2>
+              <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginTop: '2px' }}>
+                Admin va oddiy sayyoh (User) hisoblarini ko'rish va boshqarish.
+              </p>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+              {/* Search */}
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                background: 'rgba(255,255,255,0.05)',
+                border: '1px solid var(--border-subtle)',
+                borderRadius: '8px',
+                padding: '6px 12px'
+              }}>
+                <Search size={14} color="var(--text-muted)" />
+                <input
+                  type="text"
+                  placeholder="Qidiruv (Ism, Email, Davlat)..."
+                  value={userSearch}
+                  onChange={(e) => setUserSearch(e.target.value)}
+                  style={{ background: 'transparent', border: 'none', color: '#fff', fontSize: '13px', outline: 'none', width: '180px' }}
+                />
+              </div>
+
+              {/* Role filter */}
+              <select
+                value={roleFilter}
+                onChange={(e) => setRoleFilter(e.target.value as any)}
+                style={{
+                  background: 'rgba(255,255,255,0.05)',
+                  border: '1px solid var(--border-subtle)',
+                  borderRadius: '8px',
+                  padding: '6px 12px',
+                  color: '#fff',
+                  fontSize: '13px',
+                  outline: 'none'
+                }}
+              >
+                <option value="all" style={{ background: '#0D1630' }}>Barcha Rollar</option>
+                <option value="Admin" style={{ background: '#0D1630' }}>👑 Faqat Admin</option>
+                <option value="User" style={{ background: '#0D1630' }}>🎒 Faqat User (Sayyoh)</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Table */}
+          <div className="admin-table-container">
+            <table className="admin-data-table">
+              <thead>
+                <tr>
+                  <th>Foydalanuvchi</th>
+                  <th>Email</th>
+                  <th>Davlat / Til</th>
+                  <th>Rol (Darajasi)</th>
+                  <th>Sayohatlar</th>
+                  <th>Saqlanganlar</th>
+                  <th>Holati</th>
+                  <th style={{ textAlign: 'right' }}>Amallar</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredUsers.length === 0 ? (
+                  <tr>
+                    <td colSpan={8} style={{ textAlign: 'center', padding: '32px', color: 'var(--text-secondary)' }}>
+                      Foydalanuvchilar topilmadi.
+                    </td>
+                  </tr>
+                ) : (
+                  filteredUsers.map((u) => {
+                    const isRowAdmin = u.role === 'Admin';
+                    const isCurrentUser = user?.id === u.id;
+                    return (
+                      <tr key={u.id}>
+                        <td>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            <div style={{
+                              width: '32px',
+                              height: '32px',
+                              borderRadius: '50%',
+                              background: isRowAdmin
+                                ? 'linear-gradient(135deg, var(--accent-gold), #991B1B)'
+                                : 'linear-gradient(135deg, var(--accent-turquoise), #0A1128)',
+                              border: isRowAdmin ? '1px solid var(--accent-gold)' : '1px solid var(--accent-turquoise)',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              fontWeight: 800,
+                              fontSize: '12px',
+                              color: '#fff'
+                            }}>
+                              {isRowAdmin ? <Crown size={14} color="#FFD700" /> : u.name.charAt(0)}
+                            </div>
+                            <div>
+                              <div style={{ fontWeight: 700, color: '#fff' }}>{u.name}</div>
+                              <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>ID: {u.id.substring(0, 8)}…</div>
+                            </div>
+                          </div>
+                        </td>
+                        <td style={{ color: 'var(--text-secondary)' }}>{u.email}</td>
+                        <td>{u.country} ({u.preferredLanguage.toUpperCase()})</td>
+                        <td>
+                          {isRowAdmin ? (
+                            <span className="role-pill-admin">
+                              <Crown size={11} /> ADMIN
+                            </span>
+                          ) : (
+                            <span className="role-pill-user">
+                              <UserCheck size={11} /> SAYYOH (USER)
+                            </span>
+                          )}
+                        </td>
+                        <td>{u.tripsCount} ta reja</td>
+                        <td>{u.savedPlacesCount} ta joy</td>
+                        <td>
+                          <span style={{ fontSize: '12px', color: '#10B981', display: 'inline-flex', alignItems: 'center', gap: '4px', fontWeight: 600 }}>
+                            <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#10B981' }} /> Faol
+                          </span>
+                        </td>
+                        <td style={{ textAlign: 'right' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '8px' }}>
+                            <button
+                              onClick={async () => {
+                                const newRole = isRowAdmin ? 'User' : 'Admin';
+                                const success = await api.updateAdminUserRole(u.id, newRole);
+                                if (success) {
+                                  setUsers((prev) => prev.map((item) => item.id === u.id ? { ...item, role: newRole } : item));
+                                }
+                              }}
+                              disabled={isCurrentUser}
+                              className="btn-secondary"
+                              style={{
+                                padding: '5px 10px',
+                                fontSize: '11px',
+                                opacity: isCurrentUser ? 0.4 : 1,
+                                cursor: isCurrentUser ? 'not-allowed' : 'pointer'
+                              }}
+                              title={isCurrentUser ? "O'z rolingizni o'zgartira olmaysiz" : "Rolni o'zgartirish"}
+                            >
+                              {isRowAdmin ? 'Sayyohga aylantirish' : 'Admin qilish'}
+                            </button>
+                            <button
+                              onClick={async () => {
+                                if (window.confirm(`"${u.name}" (${u.email}) foydalanuvchisini ro'yxatdan butunlay o'chirishni tasdiqlaysizmi?`)) {
+                                  try {
+                                    await api.deleteAdminUser(u.id);
+                                    setUsers((prev) => prev.filter((item) => item.id !== u.id));
+                                  } catch (err: any) {
+                                    alert(err.message || "Xatolik yuz berdi");
+                                  }
+                                }
+                              }}
+                              disabled={isCurrentUser}
+                              style={{
+                                background: 'rgba(239, 68, 68, 0.15)',
+                                border: '1px solid rgba(239, 68, 68, 0.4)',
+                                color: '#EF4444',
+                                padding: '5px 8px',
+                                borderRadius: '6px',
+                                cursor: isCurrentUser ? 'not-allowed' : 'pointer',
+                                opacity: isCurrentUser ? 0.3 : 1
+                              }}
+                              title={isCurrentUser ? "O'zingizni o'chira olmaysiz" : "Foydalanuvchini o'chirish (Role-based deletion)"}
+                            >
+                              <Trash2 size={13} />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      ) : (
+        /* Analytics View */
+        <>
+          {/* Top Metric Cards (6 KPIs) */}
       <div style={{
         display: 'grid',
         gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
@@ -226,6 +493,8 @@ export const AdminPage: React.FC = () => {
           ))}
         </div>
       </div>
+      </>
+      )}
     </div>
   );
 };

@@ -8,6 +8,73 @@ export interface User {
   preferredInterests?: string;
   preferredStyle?: string;
   preferredTransport?: string;
+  avatarUrl?: string;
+}
+
+export interface AuthResponse {
+  token: string;
+  refreshToken: string;
+  expiresAt: string;
+  userId: string;
+  name: string;
+  email: string;
+  country: string;
+  language: string;
+  role: string;
+  avatarUrl?: string;
+}
+
+export interface PagedResult<T> {
+  items: T[];
+  pageNumber: number;
+  pageSize: number;
+  totalCount: number;
+  totalPages: number;
+  hasPreviousPage: boolean;
+  hasNextPage: boolean;
+}
+
+export interface PlaceFilterRequest {
+  city?: string;
+  search?: string;
+  categoryType?: number;
+  minPrice?: number;
+  maxPrice?: number;
+  minRating?: number;
+  sortBy?: 'rating_desc' | 'price_asc' | 'price_desc' | 'name_asc' | 'popular';
+  pageNumber?: number;
+  pageSize?: number;
+}
+
+export interface FileUploadResponse {
+  url: string;
+  fileName: string;
+  fileSize: number;
+  contentType: string;
+  uploadedAt: string;
+}
+
+export interface LiveTouristSignal {
+  activeTouristsCount: number;
+  city: string;
+  action: string;
+  timestamp: string;
+}
+
+export interface UserProfile {
+  id: string;
+  name: string;
+  email: string;
+  country: string;
+  preferredLanguage: string;
+  role: string;
+  preferredInterests?: string;
+  preferredStyle?: string;
+  preferredTransport?: string;
+  savedPlacesCount: number;
+  tripsCount: number;
+  avatarUrl?: string;
+  createdAt?: string;
 }
 
 export interface Place {

@@ -220,6 +220,28 @@ public class AiVisionService : IAIVisionService
 {
     public Task<AiVisionScanResponseDto> RecognizeLandmarkAsync(AiVisionScanRequestDto request)
     {
+        // If no image or request specifies unrecognized / random object
+        bool isSampleMatched = !string.IsNullOrEmpty(request.ImageUrl) || (request.UserLatitude.HasValue && Math.Abs(request.UserLatitude.Value - 39.6547) < 0.05);
+
+        if (!isSampleMatched && string.IsNullOrEmpty(request.ImageBase64))
+        {
+            var failedDto = new AiVisionScanResponseDto(
+                IsRecognized: false,
+                PlaceId: null,
+                RecognizedName: "Aniqlanmadi",
+                LocalName: "Aniqlanmadi",
+                Category: "Noma'lum",
+                Confidence: 0.15,
+                ShortDescription: "Iltimos, aniqroq rasmga tushiring. Kadrda O'zbekistonning mashhur minorasi, madrasasi yoki tarixiy obidasi aniqlanmadi.",
+                InterestingFacts: new List<string> { "Obidaning gumbazi yoki bosh fasadini kadr markaziga oling." },
+                AudioGuideScript: "Obida aniqlanmadi. Iltimos, obidani yaqinroq va aniqroq qilib qayta rasmga oling.",
+                ImageUrl: "",
+                Latitude: 0,
+                Longitude: 0
+            );
+            return Task.FromResult(failedDto);
+        }
+
         var facts = new List<string>
         {
             "Sher-Dor Madrasah features roaring lion-tiger mosaics chasing stags toward a rising sun.",

@@ -3,20 +3,14 @@ import {
   Sparkles,
   MapPin,
   Bot,
-  Camera,
-  Languages,
+  Utensils,
+  Coins,
   Radio,
   ArrowRight,
-  CheckCircle2,
   Star,
-  Globe2,
   Navigation,
-  ShieldCheck,
   Zap,
-  Volume2,
-  DollarSign,
-  Compass,
-  ArrowUpRight
+  UserPlus
 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { SilkRoadShader } from '../components/SilkRoadShader';
@@ -24,19 +18,21 @@ import { SilkRoadShader } from '../components/SilkRoadShader';
 interface LandingPageProps {
   onStartPlanning: () => void;
   onExploreMap: () => void;
-  onOpenScan: () => void;
-  onOpenTranslator: () => void;
   onOpenLogin: () => void;
+  onOpenRegister?: () => void;
 }
 
 export const LandingPage: React.FC<LandingPageProps> = ({
   onStartPlanning,
   onExploreMap,
-  onOpenScan,
-  onOpenTranslator,
-  onOpenLogin
+  onOpenLogin,
+  onOpenRegister
 }) => {
-  const { currentLanguage, setLanguage, languages } = useLanguage();
+  const { currentLanguage, setLanguage, languages, t } = useLanguage();
+
+  const isUzbek = currentLanguage === 'uz';
+  const isRussian = currentLanguage === 'ru';
+  const isTurkish = currentLanguage === 'tr';
 
   const features = [
     {
@@ -44,9 +40,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       color: 'var(--accent-turquoise)',
       bg: 'rgba(0, 168, 150, 0.15)',
       border: 'rgba(0, 168, 150, 0.35)',
-      title: 'Personalized AI Trip Planner',
-      desc: 'Generates day-by-day itineraries tailored to your budget (UZS/USD), duration, and travel style with itemized expense breakdown.',
-      action: 'Plan Trip',
+      title: isUzbek ? 'Shaxsiy AI Sayohat Rejasi' : isRussian ? 'Персональный ИИ-Планировщик' : isTurkish ? 'Kişiselleştirilmiş AI Seyahat Planı' : 'Personalized AI Trip Planner',
+      desc: isUzbek
+        ? 'Byudjetingiz (UZS/USD), muddat va sayohat uslubingizga moslashtirilgan xarajatlar tahlili bilan kunlik marshrutlar yaratadi.'
+        : isRussian
+        ? 'Генерирует посуточные маршруты под ваш бюджет (UZS/USD), дни и стиль поездки с детализацией расходов.'
+        : 'Generates day-by-day itineraries tailored to your budget (UZS/USD), duration, and travel style with itemized expense breakdown.',
+      action: t('planTrip'),
       onClick: onStartPlanning
     },
     {
@@ -54,39 +54,55 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       color: 'var(--accent-gold)',
       bg: 'rgba(212, 175, 55, 0.15)',
       border: 'rgba(212, 175, 55, 0.35)',
-      title: '24/7 AI Audio Tour Guide',
-      desc: 'Conversational voice historian answering questions about Timurid architecture, tile mosaics, legends, and traditional dining.',
-      action: 'Ask AI Guide',
+      title: isUzbek ? '24/7 AI Ovozli Audiogid' : isRussian ? '24/7 ИИ Аудиогид' : isTurkish ? '24/7 Yapay Zeka Sesli Rehber' : '24/7 AI Audio Tour Guide',
+      desc: isUzbek
+        ? 'Temuriylar meʼmorchiligi, sirli mozaikalar, afsonalar va milliy taomlar haqidagi savollarga javob beruvchi jonli ovozli suhbatdosh.'
+        : isRussian
+        ? 'Голосовой историк, отвечающий на любые вопросы об архитектуре Тимуридов, мозаиках и легендах.'
+        : 'Conversational voice historian answering questions about Timurid architecture, tile mosaics, legends, and traditional dining.',
+      action: t('aiGuide'),
       onClick: onStartPlanning
     },
     {
-      icon: Camera,
-      color: 'var(--accent-azure)',
-      bg: 'rgba(5, 178, 210, 0.15)',
-      border: 'rgba(5, 178, 210, 0.35)',
-      title: 'AI Landmark Vision Scanner',
-      desc: 'Point your camera at any monument (Registan, Gur-e-Amir) to instantly identify its history, architect, and trigger narrated audio.',
-      action: 'Try Scanner',
-      onClick: onOpenScan
+      icon: Utensils,
+      color: '#EF4444',
+      bg: 'rgba(239, 68, 68, 0.15)',
+      border: 'rgba(239, 68, 68, 0.35)',
+      title: isUzbek ? 'O‘zbek Milliy Gastronomiyasi' : isRussian ? 'Узбекская Гастрономия' : isTurkish ? 'Özbek Ulusal Gastronomisi' : 'Uzbek National Gastronomy',
+      desc: isUzbek
+        ? 'Samarqand, Toshkent va Buxoro oshi (osh vaqtlari 11:30–14:00), somsa, shashlik va shirinliklar bo‘yicha maxsus qo‘llanma.'
+        : isRussian
+        ? 'Гид по плову (11:30–14:00), самсе и шашлыкам в Самарканде, Бухаре и Ташкенте с аутентичными локациями.'
+        : 'Dedicated guide to regional plov (11:30–14:00), authentic tandoor samsa, and traditional teahouses in Uzbekistan.',
+      action: t('gastronomy'),
+      onClick: onStartPlanning
     },
     {
-      icon: Languages,
-      color: 'var(--text-turquoise)',
-      bg: 'rgba(46, 230, 214, 0.15)',
-      border: 'rgba(46, 230, 214, 0.35)',
-      title: '10-Language Voice Translator',
-      desc: '2-way speech translation between English, Uzbek, Russian, Turkish, German, French, Spanish, Chinese, Japanese, and Korean.',
-      action: 'Translate Voice',
-      onClick: onOpenTranslator
+      icon: Coins,
+      color: 'var(--accent-gold)',
+      bg: 'rgba(212, 175, 55, 0.15)',
+      border: 'rgba(212, 175, 55, 0.35)',
+      title: isUzbek ? 'Bozor & Valyuta AI Kalkulyatori' : isRussian ? 'ИИ Базарный Калькулятор' : isTurkish ? 'Pazar Pazarlık ve Döviz AI' : 'Bazaar Bargain & Currency AI',
+      desc: isUzbek
+        ? 'Siypb, Chorsu bozorlarida adolatli narxlarni bilish, savdolashish bo‘yicha AI maslahatlari va jonli valyuta konvertori.'
+        : isRussian
+        ? 'Справедливые цены на базарах Чорсу и Сиаб, подсказки для торга от ИИ и точный конвертер валют UZS/USD.'
+        : 'Fair prices at Chorsu & Siab bazaars, interactive AI bargaining phrasebook, and live UZS currency converter.',
+      action: t('bazaarCalc'),
+      onClick: onStartPlanning
     },
     {
       icon: Radio,
       color: 'var(--accent-gold)',
       bg: 'rgba(212, 175, 55, 0.15)',
       border: 'rgba(212, 175, 55, 0.35)',
-      title: 'Smart GPS Nearby Radar',
-      desc: 'Geofenced radar that automatically alerts you to nearby hidden courtyards, tea houses, and ancient madrasahs with walking distance.',
-      action: 'View Nearby',
+      title: isUzbek ? 'GPS Yaqin Atrofdagi Radar' : isRussian ? 'Умный GPS Радар Поблизости' : isTurkish ? 'Akıllı GPS Yakınlık Radarı' : 'Smart GPS Nearby Radar',
+      desc: isUzbek
+        ? 'Yaqin atrofdagi yashirin choyxonalar, qadimiy madrasalar va hunarmandchilik rastalari haqida avtomatik masofa bilan xabar beradi.'
+        : isRussian
+        ? 'Радар, который автоматически уведомляет о скрытых чайханах, медресе и мастерских с расстоянием пешком.'
+        : 'Geofenced radar that automatically alerts you to nearby hidden courtyards, tea houses, and ancient madrasahs with walking distance.',
+      action: t('nearbyRadar'),
       onClick: onExploreMap
     },
     {
@@ -94,31 +110,47 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       color: 'var(--accent-turquoise)',
       bg: 'rgba(0, 168, 150, 0.15)',
       border: 'rgba(0, 168, 150, 0.35)',
-      title: 'Smart Navigation & Route Cost',
-      desc: 'Precision map navigation with accurate walking paths and realistic local taxi fare calculations in Uzbek Som (UZS).',
-      action: 'Open Smart Map',
+      title: isUzbek ? 'Aqlli Navigatsiya & Yo‘l Narxi' : isRussian ? 'Навигация и Расчёт Стоимости' : isTurkish ? 'Akıllı Navigasyon & Rota Maliyeti' : 'Smart Navigation & Route Cost',
+      desc: isUzbek
+        ? 'Piyoda yo‘llar, mahalliy taksi tariflari va Afrosiyob tezyurar poyezdlar marshrutini so‘mda hisoblab beruvchi xarita.'
+        : isRussian
+        ? 'Точная навигация с пешеходными тропами и реальным расчётом стоимости такси в узбекских сумах (UZS).'
+        : 'Precision map navigation with accurate walking paths and realistic local taxi fare calculations in Uzbek Som (UZS).',
+      action: t('exploreMap'),
       onClick: onExploreMap
     }
   ];
 
   const samarkandLandmarks = [
     {
-      name: 'Registan Square',
-      desc: 'The iconic heart of the Timurid Renaissance featuring Ulugbek, Sher-Dor, and Tilla-Kori Madrasahs with pure gold leaf ceilings.',
+      name: isUzbek ? 'Registon Maydoni' : isRussian ? 'Площадь Регистан' : 'Registan Square',
+      desc: isUzbek
+        ? 'Ulug‘bek, Sherdor va Tilla-Kori madrasalari joylashgan Temuriylar Renessansining yuragi va oltin zarhalli gumbazlar.'
+        : isRussian
+        ? 'Сердце Самарканда с медресе Улугбека, Шердор и Тилля-Кари с куполами, покрытыми сусальным золотом.'
+        : 'The iconic heart of the Timurid Renaissance featuring Ulugbek, Sher-Dor, and Tilla-Kori Madrasahs with pure gold leaf ceilings.',
       tag: 'UNESCO World Heritage',
       price: '50,000 UZS',
-      img: 'https://images.unsplash.com/photo-1596484552834-6a58f850e0a1?auto=format&fit=crop&w=800&q=80'
+      img: 'https://images.unsplash.com/photo-1628151015968-3a4429e9ef04?auto=format&fit=crop&w=800&q=80'
     },
     {
-      name: 'Gur-e-Amir Mausoleum',
-      desc: 'The resting place of Amir Timur crowned by a 64-ribbed azure fluted dome and exquisite dark green jade cenotaph.',
+      name: isUzbek ? 'Go‘ri Amir Maqbarasi' : isRussian ? 'Мавзолей Гур-Эмир' : 'Gur-e-Amir Mausoleum',
+      desc: isUzbek
+        ? 'Sohibqiron Amir Temurning mangu maskani — 64 qovurg‘ali moviy gumbaz va to‘q yashil nefrit toshi.'
+        : isRussian
+        ? 'Усыпальница Амира Тимура с 64-ребристым лазурным куполом и темно-зелёным нефритовым надгробием.'
+        : 'The resting place of Amir Timur crowned by a 64-ribbed azure fluted dome and exquisite dark green jade cenotaph.',
       tag: 'Imperial Tomb',
       price: '40,000 UZS',
       img: 'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?auto=format&fit=crop&w=800&q=80'
     },
     {
-      name: 'Shah-i-Zinda Necropolis',
-      desc: 'A breathtaking royal avenue of mausoleums boasting the finest sapphire, turquoise, and cobalt glazed majolica tilework.',
+      name: isUzbek ? 'Shohi Zinda Majmuasi' : isRussian ? 'Некрополь Шахи-Зинда' : 'Shah-i-Zinda Necropolis',
+      desc: isUzbek
+        ? '11-15-asrlarga oid firuza va lojuvard koshinlar bilan bezatilgan qirolicha va sarkardalar maqbaralari xiyoboni.'
+        : isRussian
+        ? 'Уникальный ансамбль мавзолеев с изысканнейшей кобальтовой и бирюзовой глазурованной мозаикой.'
+        : 'A breathtaking royal avenue of mausoleums boasting the finest sapphire, turquoise, and cobalt glazed majolica tilework.',
       tag: 'Avenue of Royal Tombs',
       price: '40,000 UZS',
       img: 'https://images.unsplash.com/photo-1589182373726-e4f658ab50f0?auto=format&fit=crop&w=800&q=80'
@@ -126,9 +158,23 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   ];
 
   return (
-    <div className="landing-page-root">
+    <div className="landing-page-root" style={{ position: 'relative', minHeight: '100vh', overflowX: 'hidden' }}>
+      {/* Full-Page Interactive WebGL Silk Road Shader Background */}
+      <SilkRoadShader
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100vw',
+          height: '100vh',
+          zIndex: 0,
+          opacity: 0.85,
+          pointerEvents: 'none'
+        }}
+      />
+
       {/* Standalone Landing Navbar */}
-      <nav className="landing-navbar">
+      <nav className="landing-navbar" style={{ position: 'sticky', top: 0, zIndex: 50, background: 'rgba(7, 13, 30, 0.75)', backdropFilter: 'blur(20px)' }}>
         {/* Brand */}
         <div className="landing-brand" onClick={onStartPlanning}>
           <div className="landing-brand-icon">
@@ -138,7 +184,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             <div className="landing-brand-title">
               SAFAR <span style={{ color: 'var(--accent-turquoise)' }}>AI</span>
             </div>
-            <div className="landing-brand-subtitle">Uzbekistan Smart Travel</div>
+            <div className="landing-brand-subtitle">{t('brandSubtitle')}</div>
           </div>
         </div>
 
@@ -151,36 +197,26 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             className="landing-lang-select"
           >
             {languages.map((l) => (
-              <option key={l.code} value={l.code} style={{ background: '#0D1630' }}>
-                {l.flag} {l.name}
+              <option key={l.code} value={l.code} style={{ background: '#0D1630', color: '#fff' }}>
+                {l.name}
               </option>
             ))}
           </select>
 
           <button
             onClick={onOpenLogin}
-            className="btn-secondary landing-sign-btn"
+            className="btn-primary landing-sign-btn"
+            style={{ padding: '8px 20px', fontSize: '13px' }}
           >
-            Sign In
-          </button>
-
-          <button
-            onClick={onStartPlanning}
-            className="btn-primary landing-app-btn"
-          >
-            <Sparkles size={14} />
-            <span>Open App</span>
+            {t('signIn')}
           </button>
         </div>
       </nav>
 
       {/* Main Landing Content Container */}
-      <main className="landing-main-container">
-        {/* Hero Section with WebGL Silk Road Shader */}
+      <main className="landing-main-container" style={{ position: 'relative', zIndex: 2 }}>
+        {/* Hero Section with Glassmorphism */}
         <section className="landing-hero-section">
-          {/* Interactive WebGL Shader Canvas Background */}
-          <SilkRoadShader style={{ opacity: 0.65, borderRadius: 'inherit' }} />
-
           {/* Ambient Glows */}
           <div className="landing-hero-glow-1" />
           <div className="landing-hero-glow-2" />
@@ -188,30 +224,25 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           <div className="landing-hero-content">
             <div className="badge-gold landing-hero-badge">
               <Sparkles size={12} />
-              <span>AI-POWERED SMART TOURISM</span>
+              <span>{t('aiPoweredSmartTourism')}</span>
             </div>
 
             <h1 className="landing-hero-title">
-              Explore Uzbekistan <br />
+              {t('exploreUzbekistanTitle')} <br />
               <span className="text-gradient-silk">
-                with Intelligent AI.
+                {t('withIntelligentAi')}
               </span>
             </h1>
 
             <p className="landing-hero-desc">
-              <strong>“Your AI Guide. Your Language. Your Journey.”</strong> Instant personalized itineraries, conversational audio guides, landmark camera vision, and real-time voice translation across all 14 regions of Uzbekistan.
+              {t('heroSubtitle')}
             </p>
 
             <div className="landing-hero-actions">
               <button onClick={onStartPlanning} className="btn-primary landing-cta-primary">
                 <Sparkles size={18} />
-                <span>Plan My Trip with AI</span>
+                <span>{t('planMyTripWithAi')}</span>
                 <ArrowRight size={16} />
-              </button>
-
-              <button onClick={onExploreMap} className="btn-secondary landing-cta-secondary">
-                <MapPin size={18} color="var(--accent-turquoise)" />
-                <span>Explore Smart Map</span>
               </button>
             </div>
 
@@ -219,19 +250,19 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             <div className="landing-metrics-grid">
               <div className="landing-metric-item">
                 <div className="landing-metric-val val-turquoise">2,750+</div>
-                <div className="landing-metric-label">Years of History</div>
+                <div className="landing-metric-label">{t('yearsOfHistory')}</div>
               </div>
               <div className="landing-metric-item">
                 <div className="landing-metric-val val-gold">14</div>
-                <div className="landing-metric-label">Provinces Covered</div>
+                <div className="landing-metric-label">{t('provincesCovered')}</div>
               </div>
               <div className="landing-metric-item">
                 <div className="landing-metric-val val-white">10</div>
-                <div className="landing-metric-label">AI Languages</div>
+                <div className="landing-metric-label">{t('aiLanguages')}</div>
               </div>
               <div className="landing-metric-item">
                 <div className="landing-metric-val val-azure">24/7</div>
-                <div className="landing-metric-label">AI Tour Guide</div>
+                <div className="landing-metric-label">{t('aiTourGuide')}</div>
               </div>
             </div>
           </div>
@@ -241,11 +272,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         <section>
           <div style={{ textAlign: 'center', marginBottom: '32px' }}>
             <div className="badge-turquoise" style={{ marginBottom: '12px', display: 'inline-flex' }}>
-              <Zap size={13} /> Comprehensive Tourism Suite
+              <Zap size={13} /> {t('comprehensiveSuite')}
             </div>
-            <h2 className="landing-section-title">Everything a Tourist Needs in Uzbekistan</h2>
+            <h2 className="landing-section-title">{t('everythingTouristNeeds')}</h2>
             <p className="landing-section-subtitle">
-              No fragmented apps. SAFAR AI integrates smart planning, live navigation, natural audio narration, and camera vision into one seamless platform.
+              {t('noFragmentedApps')}
             </p>
           </div>
 
@@ -306,16 +337,16 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px', marginBottom: '24px' }}>
             <div>
               <div className="badge-gold" style={{ marginBottom: '8px', display: 'inline-flex' }}>
-                <Star size={12} /> Highlights Showcase
+                <Star size={12} /> {t('silkRoadTreasures')}
               </div>
-              <h2 style={{ fontSize: '24px', color: '#fff', fontWeight: 800 }}>Samarkand: Jewel of the Silk Road</h2>
+              <h2 style={{ fontSize: '24px', color: '#fff', fontWeight: 800 }}>{t('exploreIconicDestinations')}</h2>
               <p style={{ color: 'var(--text-secondary)', fontSize: '13px', marginTop: '4px' }}>
-                Complete AI models, coordinates, 3D audio guides, and ticketing data loaded for all major Timurid monuments.
+                {t('exploreRegionsSubtitle')}
               </p>
             </div>
 
             <button onClick={onExploreMap} className="btn-gold" style={{ padding: '10px 20px', fontSize: '13px' }}>
-              <MapPin size={15} /> Explore on Map
+              <MapPin size={15} /> {t('exploreMap')}
             </button>
           </div>
 
@@ -375,13 +406,38 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                       className="btn-primary"
                       style={{ padding: '5px 12px', fontSize: '11px', fontWeight: 700 }}
                     >
-                      Plan Route
+                      {t('planTrip')}
                     </button>
                   </div>
                 </div>
               </div>
             ))}
           </div>
+        </section>
+
+        {/* Experience Magic Call to Action */}
+        <section className="glass-panel" style={{
+          padding: '40px 32px',
+          borderRadius: 'var(--radius-xl)',
+          textAlign: 'center',
+          background: 'linear-gradient(135deg, rgba(0, 168, 150, 0.12), rgba(212, 175, 55, 0.08))',
+          border: '1px solid var(--border-active)'
+        }}>
+          <h2 style={{ fontSize: '28px', color: '#fff', fontWeight: 800, marginBottom: '12px' }}>
+            {t('experienceMagic')}
+          </h2>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '15px', maxWidth: '600px', margin: '0 auto 24px' }}>
+            {t('experienceMagicDesc')}
+          </p>
+          <button
+            onClick={onStartPlanning}
+            className="btn-primary"
+            style={{ padding: '12px 32px', fontSize: '15px', fontWeight: 700, margin: '0 auto' }}
+          >
+            <Sparkles size={18} />
+            <span>{t('startFreeJourney')}</span>
+            <ArrowRight size={18} />
+          </button>
         </section>
 
         {/* Footer */}

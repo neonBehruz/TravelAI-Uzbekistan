@@ -10,6 +10,7 @@ import {
   ArrowRight,
   Download
 } from 'lucide-react';
+import { useLanguage } from '../context/LanguageContext';
 import { AiTripPlan } from '../types';
 
 interface MyTripsPageProps {
@@ -18,26 +19,38 @@ interface MyTripsPageProps {
 }
 
 export const MyTripsPage: React.FC<MyTripsPageProps> = ({ onPlanNew, onViewPlan }) => {
+  const { t, currentLanguage } = useLanguage();
+  const isUzbek = currentLanguage === 'uz';
+  const isRussian = currentLanguage === 'ru';
+
   const [savedTrips, setSavedTrips] = useState<any[]>([
     {
       id: 'trip-1',
-      title: '2-Day Samarkand Timurid Renaissance Highlights',
+      title: isUzbek
+        ? 'Samarqand Temuriylar Renessansi 2 Kunlik Sayohati'
+        : isRussian
+        ? '2-Дневный Тур по Шедеврам Тимуридов в Самарканде'
+        : '2-Day Samarkand Timurid Renaissance Highlights',
       destination: 'Samarkand',
       days: 2,
       budget: '1,000,000 UZS',
       distance: '11.8 km',
-      date: 'Saved on Aug 22, 2026',
+      date: isUzbek ? '2026-yil 22-avgustda saqlangan' : isRussian ? 'Сохранено 22 авг, 2026' : 'Saved on Aug 22, 2026',
       activitiesCount: 7,
-      img: 'https://images.unsplash.com/photo-1596484552834-6a58f850e0a1?auto=format&fit=crop&w=600&q=80'
+      img: 'https://images.unsplash.com/photo-1628151015968-3a4429e9ef04?auto=format&fit=crop&w=600&q=80'
     },
     {
       id: 'trip-2',
-      title: '1-Day Express Silk Road Gastronomy & Bazaars',
+      title: isUzbek
+        ? '1 Kunlik Ipak Yo‘li Milliy Taomlar & Bozorlar Gastro-Turi'
+        : isRussian
+        ? '1-Дневный Гастрономический Тур по Базарам Шёлкового Пути'
+        : '1-Day Express Silk Road Gastronomy & Bazaars',
       destination: 'Samarkand',
       days: 1,
       budget: '600,000 UZS',
       distance: '6.4 km',
-      date: 'Saved on Aug 19, 2026',
+      date: isUzbek ? '2026-yil 19-avgustda saqlangan' : isRussian ? 'Сохранено 19 авг, 2026' : 'Saved on Aug 19, 2026',
       activitiesCount: 4,
       img: 'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?auto=format&fit=crop&w=600&q=80'
     }
@@ -53,16 +66,16 @@ export const MyTripsPage: React.FC<MyTripsPageProps> = ({ onPlanNew, onViewPlan 
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
         <div>
           <div className="badge-turquoise" style={{ marginBottom: '8px' }}>
-            <Bookmark size={12} /> Saved Itineraries
+            <Bookmark size={12} /> {t('savedItineraries')}
           </div>
-          <h1 style={{ fontSize: '32px', color: '#fff' }}>My Travel Itineraries</h1>
+          <h1 style={{ fontSize: '32px', color: '#fff' }}>{t('myTravelItineraries')}</h1>
           <p style={{ color: 'var(--text-secondary)', fontSize: '14px', marginTop: '4px' }}>
-            Access and manage all AI-generated travel routes for offline and online navigation.
+            {t('itinerariesSubtitle')}
           </p>
         </div>
 
         <button onClick={onPlanNew} className="btn-primary">
-          <Sparkles size={16} /> Plan New Journey
+          <Sparkles size={16} /> {t('planNewJourney')}
         </button>
       </div>
 
@@ -70,12 +83,12 @@ export const MyTripsPage: React.FC<MyTripsPageProps> = ({ onPlanNew, onViewPlan 
       {savedTrips.length === 0 ? (
         <div className="glass-panel" style={{ padding: '60px', textAlign: 'center', borderRadius: 'var(--radius-xl)' }}>
           <Bookmark size={48} color="var(--text-muted)" style={{ margin: '0 auto 16px' }} />
-          <h2 style={{ fontSize: '20px', color: '#fff', marginBottom: '8px' }}>No Saved Trips Yet</h2>
+          <h2 style={{ fontSize: '20px', color: '#fff', marginBottom: '8px' }}>{t('noSavedTrips')}</h2>
           <p style={{ color: 'var(--text-secondary)', fontSize: '14px', maxWidth: '400px', margin: '0 auto 24px' }}>
-            Use the SAFAR AI Trip Planner to create your first customized route through Samarkand.
+            {t('noSavedTripsDesc')}
           </p>
           <button onClick={onPlanNew} className="btn-primary">
-            <Sparkles size={16} /> Plan Trip
+            <Sparkles size={16} /> {t('planTrip')}
           </button>
         </div>
       ) : (
@@ -106,7 +119,7 @@ export const MyTripsPage: React.FC<MyTripsPageProps> = ({ onPlanNew, onViewPlan 
                   fontWeight: 700,
                   color: 'var(--accent-turquoise)'
                 }}>
-                  {trip.days} Days Itinerary
+                  {trip.days} {t('daysItinerary')}
                 </div>
               </div>
 
@@ -126,12 +139,12 @@ export const MyTripsPage: React.FC<MyTripsPageProps> = ({ onPlanNew, onViewPlan 
                     border: '1px solid var(--border-subtle)'
                   }}>
                     <div>
-                      <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Budget</div>
+                      <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{t('budget')}</div>
                       <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-gold)' }}>{trip.budget}</div>
                     </div>
                     <div>
-                      <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Activities</div>
-                      <div style={{ fontSize: '13px', fontWeight: 700, color: '#fff' }}>{trip.activitiesCount} Stops</div>
+                      <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{t('activities')}</div>
+                      <div style={{ fontSize: '13px', fontWeight: 700, color: '#fff' }}>{trip.activitiesCount} {t('stops')}</div>
                     </div>
                   </div>
                 </div>
@@ -157,7 +170,7 @@ export const MyTripsPage: React.FC<MyTripsPageProps> = ({ onPlanNew, onViewPlan 
                     className="btn-primary"
                     style={{ padding: '8px 18px', fontSize: '13px' }}
                   >
-                    <span>Open Journey</span>
+                    <span>{t('openJourney')}</span>
                     <ArrowRight size={14} />
                   </button>
                 </div>

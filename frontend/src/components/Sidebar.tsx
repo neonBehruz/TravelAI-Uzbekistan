@@ -4,9 +4,6 @@ import {
   MapPin,
   Sparkles,
   Bot,
-  Camera,
-  Languages,
-  Radio,
   Bookmark,
   User,
   ShieldCheck,
@@ -16,252 +13,299 @@ import {
   Utensils,
   Train,
   ShieldAlert,
-  Globe
+  Globe,
+  Crown,
+  Hotel,
+  Wallet,
+  CloudSun,
+  X
 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
-import { useLocation, CITIES } from '../context/LocationContext';
 
 interface SidebarProps {
   currentTab: string;
   onSelectTab: (tab: string) => void;
+  isMobileOpen?: boolean;
+  onCloseMobile?: () => void;
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({ currentTab, onSelectTab }) => {
-  const { currentLanguage, setLanguage, languages } = useLanguage();
+export const Sidebar: React.FC<SidebarProps> = ({
+  currentTab,
+  onSelectTab,
+  isMobileOpen,
+  onCloseMobile
+}) => {
+  const { currentLanguage, setLanguage, languages, t } = useLanguage();
   const { user, isAuthenticated, logout } = useAuth();
-  const { location } = useLocation();
+
+  const isAdmin = user?.role === 'Admin';
+
+  const handleItemClick = (tabId: string) => {
+    onSelectTab(tabId);
+    if (onCloseMobile) onCloseMobile();
+  };
 
   const navItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: Compass, badge: null },
-    { id: 'plan-trip', label: 'AI Trip Planner', icon: Sparkles, badge: 'Smart' },
-    { id: 'map', label: 'Smart Map', icon: MapPin, badge: null },
-    { id: 'ai-guide', label: 'AI Tour Guide', icon: Bot, badge: 'Voice' },
-    { id: 'scan-place', label: 'AI Camera Scan', icon: Camera, badge: 'Vision' },
-    { id: 'translator', label: 'Voice Translator', icon: Languages, badge: '10 Langs' },
-    { id: 'gastronomy', label: 'Milliy Taomlar & Osh', icon: Utensils, badge: 'Osh Radar' },
-    { id: 'bazaar-calculator', label: 'Bozor & Valyuta AI', icon: Coins, badge: 'Savdolash' },
-    { id: 'transport', label: 'Afrosiyob & Transport', icon: Train, badge: 'Tezyurar' },
-    { id: 'sos', label: 'Sayyoh SOS Yordam', icon: ShieldAlert, badge: '24/7' },
-    { id: 'nearby', label: 'Nearby Radar', icon: Radio, badge: 'GPS' },
-    { id: 'destinations', label: 'Destinations', icon: Globe, badge: 'Samarkand' },
-    { id: 'my-trips', label: 'My Trips', icon: Bookmark, badge: null }
+    { id: 'dashboard', label: t('dashboard'), icon: Compass },
+    { id: 'plan-trip', label: t('planTrip'), icon: Sparkles },
+    { id: 'map', label: t('smartMap'), icon: MapPin },
+    { id: 'ai-guide', label: t('aiGuide'), icon: Bot },
+    { id: 'budget-tracker', label: 'Byudjet & Hamyon', icon: Wallet },
+    { id: 'weather-seasons', label: 'Ob-havo & Mavsum', icon: CloudSun },
+    { id: 'gastronomy', label: t('gastronomy'), icon: Utensils },
+    { id: 'hotels', label: t('hotels') || 'Mehmonxonalar', icon: Hotel },
+    { id: 'bazaar-calculator', label: t('bazaarCalc'), icon: Coins },
+    { id: 'transport', label: t('transport'), icon: Train },
+    { id: 'sos', label: t('sosHelp'), icon: ShieldAlert },
+    { id: 'destinations', label: t('destinations'), icon: Globe },
+    { id: 'my-trips', label: t('myTrips'), icon: Bookmark }
   ];
 
-  if (user?.role === 'Admin') {
-    navItems.push({ id: 'admin', label: 'Admin Panel', icon: ShieldCheck, badge: 'Live' });
-  }
-
   return (
-    <aside className="app-sidebar">
-      {/* Brand Header */}
-      <div
-        onClick={() => onSelectTab('landing')}
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '12px',
-          padding: '0 4px 20px',
-          cursor: 'pointer',
-          borderBottom: '1px solid var(--border-subtle)'
-        }}
-      >
-        <div style={{
-          width: '40px',
-          height: '40px',
-          borderRadius: '12px',
-          background: 'linear-gradient(135deg, var(--accent-turquoise), var(--accent-gold))',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          boxShadow: '0 0 15px rgba(0, 168, 150, 0.4)',
-          flexShrink: 0
-        }}>
-          <Navigation size={22} color="#070D1E" />
-        </div>
-        <div>
-          <h2 style={{ fontSize: '19px', letterSpacing: '0.04em', color: '#fff', display: 'flex', alignItems: 'center', gap: '4px' }}>
-            SAFAR <span style={{ color: 'var(--accent-turquoise)' }}>AI</span>
-          </h2>
-          <p style={{ fontSize: '11px', color: 'var(--text-gold)', fontWeight: 600 }}>Uzbekistan Smart Travel</p>
-        </div>
-      </div>
+    <>
+      {/* Mobile Backdrop Overlay */}
+      {isMobileOpen && (
+        <div
+          onClick={onCloseMobile}
+          className="mobile-sidebar-backdrop"
+        />
+      )}
 
-      {/* GPS Status Indicator */}
-      <div style={{
-        marginTop: '14px',
-        padding: '10px 12px',
-        borderRadius: '10px',
-        background: 'rgba(0, 168, 150, 0.08)',
-        border: '1px solid rgba(0, 168, 150, 0.2)',
-        display: 'flex',
-        alignItems: 'center',
-        gap: '10px'
-      }}>
-        <div style={{
-          position: 'relative',
-          width: '10px',
-          height: '10px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          flexShrink: 0
-        }}>
-          <span style={{
-            width: '8px',
-            height: '8px',
-            borderRadius: '50%',
-            backgroundColor: '#10B981',
-            boxShadow: '0 0 8px #10B981',
-            display: 'block'
-          }} />
-        </div>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: '10px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 800, letterSpacing: '0.04em' }}>Active Location</div>
-          <div style={{ fontSize: '12px', fontWeight: 700, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-            {location.city} • {CITIES[location.city]?.region || 'Uzbekistan'}
-          </div>
-        </div>
-      </div>
-
-      {/* Navigation List */}
-      <nav style={{ flex: 1, overflowY: 'auto', marginTop: '14px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-        {navItems.map((item) => {
-          const Icon = item.icon;
-          const isActive = currentTab === item.id;
-          return (
-            <button
-              key={item.id}
-              onClick={() => onSelectTab(item.id)}
-              className={`sidebar-nav-btn ${isActive ? 'active' : ''}`}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <Icon size={18} color={isActive ? 'var(--accent-turquoise)' : 'var(--text-secondary)'} />
-                <span>{item.label}</span>
-              </div>
-              {item.badge && (
-                <span style={{
-                  fontSize: '10px',
-                  fontWeight: 700,
-                  padding: '2px 6px',
-                  borderRadius: '6px',
-                  background: isActive ? 'var(--accent-gold)' : 'rgba(255,255,255,0.08)',
-                  color: isActive ? '#070D1E' : 'var(--text-muted)'
-                }}>
-                  {item.badge}
-                </span>
-              )}
-            </button>
-          );
-        })}
-      </nav>
-
-      {/* Language Selector Dropdown */}
-      <div style={{ padding: '12px 0', borderTop: '1px solid var(--border-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: 'var(--text-secondary)' }}>
-          <Globe size={15} color="var(--accent-turquoise)" />
-          <span>Language:</span>
-        </div>
-        <select
-          value={currentLanguage}
-          onChange={(e) => setLanguage(e.target.value as any)}
+      <aside className={`app-sidebar ${isMobileOpen ? 'mobile-open' : ''}`}>
+        {/* Brand Header */}
+        <div
           style={{
-            background: 'var(--bg-secondary)',
-            color: '#fff',
-            border: '1px solid var(--border-subtle)',
-            padding: '4px 8px',
-            borderRadius: '6px',
-            fontSize: '12px',
-            cursor: 'pointer',
-            outline: 'none'
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '8px',
+            padding: '0 4px 16px',
+            borderBottom: '1px solid var(--border-subtle)'
           }}
         >
-          {languages.map((l) => (
-            <option key={l.code} value={l.code}>
-              {l.flag} {l.nativeName}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      {/* User Profile / Auth Footer */}
-      <div style={{
-        paddingTop: '12px',
-        borderTop: '1px solid var(--border-subtle)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between'
-      }}>
-        {isAuthenticated && user ? (
-          <>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between'
+            }}
+          >
             <div
-              onClick={() => onSelectTab('profile')}
-              style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', minWidth: 0 }}
+              onClick={() => handleItemClick('landing')}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                cursor: 'pointer'
+              }}
             >
               <div style={{
-                width: '34px',
-                height: '34px',
-                borderRadius: '50%',
-                background: 'linear-gradient(135deg, var(--accent-turquoise), #0A1128)',
-                border: '1px solid var(--accent-turquoise)',
+                width: '40px',
+                height: '40px',
+                borderRadius: '12px',
+                background: isAdmin
+                  ? 'linear-gradient(135deg, var(--accent-gold), #E11D48)'
+                  : 'linear-gradient(135deg, var(--accent-turquoise), var(--accent-gold))',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                fontWeight: 700,
-                color: '#fff',
-                fontSize: '13px',
+                boxShadow: isAdmin ? '0 0 18px rgba(212, 175, 55, 0.5)' : '0 0 15px rgba(0, 168, 150, 0.4)',
                 flexShrink: 0
               }}>
-                {user.name.charAt(0)}
+                {isAdmin ? <Crown size={22} color="#070D1E" /> : <Navigation size={22} color="#070D1E" />}
               </div>
-              <div style={{ minWidth: 0 }}>
-                <div style={{ fontSize: '13px', fontWeight: 600, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                  {user.name}
-                </div>
-                <div style={{ fontSize: '10px', color: 'var(--text-gold)' }}>{user.country} • {user.role}</div>
+              <div>
+                <h2 style={{ fontSize: '19px', letterSpacing: '0.04em', color: '#fff', margin: 0, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  SAFAR <span style={{ color: isAdmin ? 'var(--accent-gold)' : 'var(--accent-turquoise)' }}>AI</span>
+                </h2>
+                <p style={{ fontSize: '11px', color: isAdmin ? 'var(--text-gold)' : 'var(--text-turquoise)', fontWeight: 600, margin: 0 }}>
+                  {isAdmin ? 'Management Console' : 'Uzbekistan Smart Travel'}
+                </p>
               </div>
             </div>
+
+            {/* Close Button on Mobile Drawer */}
+            {onCloseMobile && (
+              <button
+                onClick={onCloseMobile}
+                className="mobile-close-sidebar-btn"
+                title="Yopish"
+              >
+                <X size={20} color="var(--text-secondary)" />
+              </button>
+            )}
+          </div>
+
+          {/* Distinct Admin Badge in Brand Header */}
+          {isAdmin && (
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              background: 'linear-gradient(90deg, rgba(212, 175, 55, 0.2), rgba(225, 29, 72, 0.15))',
+              border: '1px solid rgba(212, 175, 55, 0.4)',
+              padding: '4px 10px',
+              borderRadius: '8px',
+              marginTop: '4px'
+            }}>
+              <ShieldCheck size={13} color="var(--accent-gold)" />
+              <span style={{ fontSize: '10.5px', fontWeight: 800, color: 'var(--text-gold)', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
+                Admin Privilege Active
+              </span>
+            </div>
+          )}
+        </div>
+
+        {/* Admin Special Quick Access Section if Admin */}
+        {isAdmin && (
+          <div style={{ marginTop: '12px', marginBottom: '2px' }}>
+            <div style={{ fontSize: '10px', fontWeight: 800, color: 'var(--text-gold)', letterSpacing: '0.08em', textTransform: 'uppercase', padding: '0 4px 6px' }}>
+              👑 Administrator Hub
+            </div>
             <button
-              onClick={logout}
-              title="Logout"
-              style={{ padding: '6px', color: 'var(--text-muted)', borderRadius: '6px' }}
+              onClick={() => handleItemClick('admin')}
+              className={`sidebar-admin-btn ${currentTab === 'admin' ? 'active' : ''}`}
             >
-              <LogOut size={16} />
-            </button>
-          </>
-        ) : (
-          <div style={{ width: '100%', display: 'flex', gap: '8px' }}>
-            <button
-              onClick={() => onSelectTab('login')}
-              style={{
-                flex: 1,
-                padding: '8px',
-                borderRadius: '8px',
-                background: 'rgba(255,255,255,0.06)',
-                color: '#fff',
-                fontSize: '12px',
-                fontWeight: 600
-              }}
-            >
-              Log In
-            </button>
-            <button
-              onClick={() => onSelectTab('register')}
-              style={{
-                flex: 1,
-                padding: '8px',
-                borderRadius: '8px',
-                background: 'var(--accent-turquoise)',
-                color: '#070D1E',
-                fontSize: '12px',
-                fontWeight: 700
-              }}
-            >
-              Sign Up
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <ShieldCheck size={18} color="var(--accent-gold)" />
+                <span>Admin Boshqaruv Paneli</span>
+              </div>
+              <span style={{
+                fontSize: '9.5px',
+                fontWeight: 800,
+                background: 'rgba(212, 175, 55, 0.3)',
+                color: 'var(--accent-gold)',
+                padding: '2px 6px',
+                borderRadius: '4px',
+                border: '1px solid rgba(212, 175, 55, 0.5)'
+              }}>
+                LIVE
+              </span>
             </button>
           </div>
         )}
-      </div>
-    </aside>
+
+        {/* Navigation List */}
+        <nav style={{ flex: 1, overflowY: 'auto', marginTop: '12px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          <div style={{ fontSize: '10px', fontWeight: 800, color: 'var(--text-muted)', letterSpacing: '0.08em', textTransform: 'uppercase', padding: '0 4px 4px' }}>
+            {isAdmin ? 'Traveler Views' : 'Navigation'}
+          </div>
+          {navItems.map((item) => {
+            const Icon = item.icon;
+            const isActive = currentTab === item.id;
+            return (
+              <button
+                key={item.id}
+                onClick={() => handleItemClick(item.id)}
+                className={`sidebar-nav-btn ${isActive ? 'active' : ''}`}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <Icon size={18} color={isActive ? 'var(--accent-turquoise)' : 'var(--text-secondary)'} />
+                  <span>{item.label}</span>
+                </div>
+              </button>
+            );
+          })}
+        </nav>
+
+        {/* User Profile / Auth Footer */}
+        <div style={{
+          paddingTop: '14px',
+          borderTop: '1px solid var(--border-subtle)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between'
+        }}>
+          {isAuthenticated && user ? (
+            <>
+              <div
+                onClick={() => handleItemClick('profile')}
+                style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', minWidth: 0 }}
+              >
+                <div style={{
+                  width: '36px',
+                  height: '36px',
+                  borderRadius: '50%',
+                  background: isAdmin
+                    ? 'linear-gradient(135deg, var(--accent-gold), #7F1D1D)'
+                    : 'linear-gradient(135deg, var(--accent-turquoise), #0A1128)',
+                  border: isAdmin ? '2px solid var(--accent-gold)' : '1px solid var(--accent-turquoise)',
+                  boxShadow: isAdmin ? '0 0 12px rgba(212, 175, 55, 0.4)' : 'none',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontWeight: 800,
+                  color: '#fff',
+                  fontSize: '14px',
+                  flexShrink: 0
+                }}>
+                  {isAdmin ? <Crown size={18} color="#FFD700" /> : user.name.charAt(0)}
+                </div>
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ fontSize: '13px', fontWeight: 700, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    {user.name}
+                  </div>
+                  <div style={{
+                    fontSize: '10px',
+                    fontWeight: 800,
+                    color: isAdmin ? 'var(--accent-gold)' : 'var(--accent-turquoise)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px'
+                  }}>
+                    {isAdmin ? '👑 ADMINISTRATOR' : `🎒 SAYYOH (${user.country})`}
+                  </div>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  logout();
+                  if (onCloseMobile) onCloseMobile();
+                }}
+                title="Logout"
+                style={{ padding: '6px', color: 'var(--text-muted)', borderRadius: '6px', background: 'none', border: 'none', cursor: 'pointer', transition: 'color 0.2s' }}
+              >
+                <LogOut size={16} />
+              </button>
+            </>
+          ) : (
+            <div style={{ width: '100%', display: 'flex', gap: '8px' }}>
+              <button
+                onClick={() => handleItemClick('login')}
+                style={{
+                  flex: 1,
+                  padding: '8px',
+                  borderRadius: '8px',
+                  background: 'rgba(255,255,255,0.06)',
+                  color: '#fff',
+                  fontSize: '12px',
+                  fontWeight: 600,
+                  border: 'none',
+                  cursor: 'pointer'
+                }}
+              >
+                {t('login')}
+              </button>
+              <button
+                onClick={() => handleItemClick('register')}
+                style={{
+                  flex: 1,
+                  padding: '8px',
+                  borderRadius: '8px',
+                  background: 'var(--accent-turquoise)',
+                  color: '#070D1E',
+                  fontSize: '12px',
+                  fontWeight: 700,
+                  border: 'none',
+                  cursor: 'pointer'
+                }}
+              >
+                {t('register')}
+              </button>
+            </div>
+          )}
+        </div>
+      </aside>
+    </>
   );
 };

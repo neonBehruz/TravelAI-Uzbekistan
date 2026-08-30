@@ -250,6 +250,28 @@ input, select, textarea {
   letter-spacing: 0.04em;
 }
 
+.weather-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-full);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.weather-badge span {
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
 /* Animations */
 @keyframes pulse-radar {
   0% { transform: scale(0.95); opacity: 0.8; }
@@ -332,18 +354,147 @@ input, select, textarea {
 
 @media (max-width: 1024px) {
   .app-sidebar {
-    display: none;
+    display: flex !important;
+    position: fixed !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 290px !important;
+    height: 100vh !important;
+    z-index: 1200 !important;
+    transform: translateX(-100%) !important;
+    transition: transform 0.35s cubic-bezier(0.25, 1, 0.5, 1) !important;
+    box-shadow: 0 0 50px rgba(0, 0, 0, 0.95) !important;
   }
-  .app-sidebar.open {
-    display: flex;
+
+  .app-sidebar.mobile-open {
+    transform: translateX(0) !important;
   }
+
+  .mobile-sidebar-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    z-index: 1199;
+    animation: fadeIn 0.25s ease;
+  }
+
+  .mobile-menu-toggle-btn {
+    display: flex !important;
+    align-items: center;
+    justifyContent: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid var(--border-subtle);
+    cursor: pointer;
+    margin-right: 6px;
+  }
+
+  .mobile-close-sidebar-btn {
+    display: flex !important;
+    align-items: center;
+    justifyContent: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    cursor: pointer;
+  }
+
   .app-main {
     margin-left: 0 !important;
     width: 100% !important;
-    padding-bottom: 85px;
+    padding-bottom: 85px !important;
   }
+
   .app-content {
-    padding: 16px 12px;
+    padding: 16px 12px !important;
+  }
+
+  .app-header {
+    padding: 10px 12px !important;
+    gap: 8px;
+  }
+
+  .header-left-bar {
+    gap: 6px !important;
+  }
+
+  .city-selector-pill {
+    padding: 4px 8px !important;
+    font-size: 12px !important;
+  }
+
+  .weather-badge {
+    padding: 4px 8px !important;
+    font-size: 11px !important;
+  }
+}
+
+@media (min-width: 1025px) {
+  .mobile-menu-toggle-btn,
+  .mobile-close-sidebar-btn,
+  .mobile-sidebar-backdrop {
+    display: none !important;
+  }
+}
+
+/* ==========================================================================
+   📺 4K / 8K SMART TV & ULTRA-WIDE SCREENS (1920px, 2560px, 3840px+)
+   ========================================================================== */
+@media (min-width: 1920px) {
+  .app-content {
+    max-width: 1720px;
+    padding: 40px 60px;
+  }
+}
+
+@media (min-width: 2560px) {
+  html {
+    font-size: 18px; /* Proportional scaling for 4K / 8K Big Screen TVs */
+  }
+
+  .app-sidebar {
+    width: 320px;
+  }
+
+  .app-main {
+    margin-left: 320px;
+    width: calc(100% - 320px);
+  }
+
+  .app-content {
+    max-width: 2200px;
+    padding: 48px 80px;
+  }
+}
+
+/* ==========================================================================
+   📱 SMALL SMARTPHONES (max-width: 480px)
+   ========================================================================== */
+@media (max-width: 480px) {
+  html {
+    font-size: 14px;
+  }
+
+  .app-content {
+    padding: 12px 8px !important;
+  }
+
+  .banner-action-buttons {
+    width: 100%;
+  }
+
+  .banner-action-buttons button {
+    flex: 1;
+    justify-content: center;
   }
 }
 
@@ -1184,11 +1335,13 @@ input, select, textarea {
 .landing-hero-section {
   position: relative;
   border-radius: var(--radius-xl);
-  background: linear-gradient(135deg, rgba(13, 22, 48, 0.85), rgba(7, 13, 30, 0.92));
-  border: 1px solid var(--border-active);
+  background: linear-gradient(135deg, rgba(13, 22, 48, 0.45), rgba(7, 13, 30, 0.65));
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(0, 168, 150, 0.35);
   padding: 64px 44px;
   overflow: hidden;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6), inset 0 0 40px rgba(0, 168, 150, 0.08);
 }
 
 .landing-hero-glow-1 {
@@ -1327,7 +1480,9 @@ input, select, textarea {
   padding: 36px 28px;
   border-radius: var(--radius-xl);
   border: 1px solid var(--border-gold);
-  background: linear-gradient(135deg, rgba(16, 28, 60, 0.9), rgba(10, 17, 40, 0.95));
+  background: linear-gradient(135deg, rgba(16, 28, 60, 0.6), rgba(10, 17, 40, 0.75));
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
 }
 
 .landing-landmarks-grid {
@@ -1542,4 +1697,841 @@ input, select, textarea {
   gap: 12px;
 }
 
+/* ==========================================================================
+   👑 ADMIN vs USER ROLE DISTINCTION SYSTEM
+   ========================================================================== */
 
+/* Badges */
+.badge-admin-crown {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: var(--radius-full);
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.22), rgba(225, 29, 72, 0.18));
+  border: 1px solid rgba(212, 175, 55, 0.6);
+  color: #FCD34D;
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  box-shadow: 0 0 16px rgba(212, 175, 55, 0.3);
+}
+
+.badge-user-verified {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: var(--radius-full);
+  background: rgba(0, 168, 150, 0.14);
+  border: 1px solid rgba(0, 168, 150, 0.45);
+  color: var(--text-turquoise);
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+/* Header Admin Quick Portal Button */
+.admin-portal-header-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border-radius: var(--radius-full);
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.25), rgba(180, 83, 9, 0.35));
+  border: 1px solid rgba(212, 175, 55, 0.6);
+  color: #FDE68A;
+  font-size: 12.5px;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  box-shadow: 0 0 18px rgba(212, 175, 55, 0.35);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.admin-portal-header-pill:hover {
+  transform: translateY(-1px) scale(1.03);
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.4), rgba(180, 83, 9, 0.5));
+  box-shadow: 0 0 25px rgba(212, 175, 55, 0.55);
+}
+
+/* Sidebar Admin Nav Highlight */
+.sidebar-admin-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-radius: 10px;
+  width: 100%;
+  border: 1px solid rgba(212, 175, 55, 0.35) !important;
+  background: linear-gradient(90deg, rgba(212, 175, 55, 0.15), rgba(212, 175, 55, 0.04));
+  color: #FDE68A;
+  font-weight: 700;
+  font-size: 13.5px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+  box-shadow: 0 0 12px rgba(212, 175, 55, 0.15);
+}
+
+.sidebar-admin-btn:hover {
+  background: linear-gradient(90deg, rgba(212, 175, 55, 0.25), rgba(212, 175, 55, 0.08));
+  border-color: rgba(212, 175, 55, 0.6) !important;
+  color: #fff;
+  transform: translateX(2px);
+}
+
+.sidebar-admin-btn.active {
+  background: linear-gradient(90deg, rgba(212, 175, 55, 0.35), rgba(212, 175, 55, 0.1));
+  border: 1px solid var(--accent-gold) !important;
+  border-left: 4px solid var(--accent-gold) !important;
+  color: #ffffff;
+  box-shadow: 0 0 20px rgba(212, 175, 55, 0.4);
+}
+
+/* Dashboard Admin Command Strip */
+.admin-dash-strip {
+  padding: 16px 20px;
+  border-radius: var(--radius-lg);
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.18), rgba(13, 22, 48, 0.9));
+  border: 1px solid rgba(212, 175, 55, 0.45);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4), 0 0 20px rgba(212, 175, 55, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+/* User Management Table in Admin */
+.admin-table-container {
+  width: 100%;
+  overflow-x: auto;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-card);
+}
+
+.admin-data-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 13.5px;
+}
+
+.admin-data-table th {
+  background: rgba(255, 255, 255, 0.04);
+  padding: 14px 18px;
+  color: var(--text-secondary);
+  font-weight: 700;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.admin-data-table td {
+  padding: 14px 18px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  color: #fff;
+}
+
+.admin-data-table tr:hover td {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.role-pill-admin {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: var(--radius-full);
+  background: rgba(212, 175, 55, 0.2);
+  border: 1px solid rgba(212, 175, 55, 0.5);
+  color: var(--text-gold);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.role-pill-user {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: var(--radius-full);
+  background: rgba(0, 168, 150, 0.15);
+  border: 1px solid rgba(0, 168, 150, 0.4);
+  color: var(--text-turquoise);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+/* ==========================================================================
+   🌐 COMPREHENSIVE RESPONSIVE DESIGN SYSTEM (PX-PERFECT FOR ALL DEVICES)
+   Supporting: 
+   - 📱 Small Phones (320px - 375px)
+   - 📱 Standard Phones (376px - 480px)
+   - 📱 Phablets & Landscape (481px - 768px)
+   - 📟 Tablets & iPads (769px - 1024px)
+   - 💻 Laptops (1025px - 1440px)
+   - 🖥️ Desktops Full HD (1441px - 1920px)
+   - 🖥️ 2K QHD & Ultrawide (1921px - 2560px)
+   - 📺 4K UHD & Smart TVs (2561px - 3840px+)
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. Universal Base Fluid Units & Media Defaults
+   -------------------------------------------------------------------------- */
+:root {
+  --app-max-width: 1440px;
+  --header-height: 64px;
+  --sidebar-width: 280px;
+  --mobile-tabbar-height: 68px;
+  --content-padding-x: 32px;
+  --content-padding-y: 28px;
+}
+
+img, video, canvas, svg {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* Base Header Responsive Styling */
+.app-header {
+  height: var(--header-height);
+  padding: 0 var(--content-padding-x);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border-subtle);
+  background: rgba(7, 13, 30, 0.88);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  position: sticky;
+  top: 0;
+  z-index: 80;
+  width: 100%;
+  flex-shrink: 0;
+  gap: 12px;
+}
+
+.header-left-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  flex-shrink: 1;
+  flex-wrap: nowrap;
+}
+
+.header-right-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+.header-desktop-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.header-action-btn, .header-action-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 12px;
+  font-size: 12.5px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  border-radius: var(--radius-md);
+  transition: all 0.2s ease;
+}
+
+/* Responsive label collapsing to avoid crowding */
+@media (max-width: 1440px) {
+  .header-action-btn .action-btn-label {
+    display: none;
+  }
+  .header-action-btn {
+    padding: 8px 10px;
+  }
+}
+
+@media (max-width: 1200px) {
+  .weather-badge {
+    display: none !important;
+  }
+  .badge-live-pulse {
+    display: none !important;
+  }
+}
+
+.header-landing-btn {
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: 700;
+  gap: 6px;
+  border-radius: var(--radius-full);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--border-subtle);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.badge-live-pulse {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(0, 168, 150, 0.12);
+  border: 1px solid rgba(0, 168, 150, 0.3);
+  padding: 4px 8px;
+  border-radius: var(--radius-full);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--accent-turquoise);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.badge-live-pulse .live-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #10B981;
+  box-shadow: 0 0 8px #10B981;
+}
+
+/* Floating Audio Bar Styling */
+.floating-audio-bar {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(100% - 320px);
+  max-width: 850px;
+  background: rgba(13, 22, 48, 0.94);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--border-gold);
+  border-radius: var(--radius-lg);
+  padding: 12px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  z-index: 500;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6), 0 0 25px rgba(212, 175, 55, 0.2);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.audio-bar-info-section {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  flex: 1;
+}
+
+.audio-bar-icon-box {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--accent-gold), var(--accent-turquoise));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #070D1E;
+  flex-shrink: 0;
+}
+
+.audio-bar-text-group {
+  min-width: 0;
+  flex: 1;
+}
+
+.audio-bar-badge-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.audio-bar-badge {
+  font-size: 10px;
+  padding: 2px 8px;
+}
+
+.audio-bar-subtext {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.audio-bar-title {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 2px;
+}
+
+.audio-bar-waveforms {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  height: 24px;
+  padding: 0 8px;
+}
+
+.audio-bar-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.audio-bar-play-btn {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: var(--accent-turquoise);
+  color: #070D1E;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 15px rgba(0, 168, 150, 0.4);
+  transition: transform 0.2s ease;
+}
+
+.audio-bar-play-btn:hover {
+  transform: scale(1.05);
+}
+
+.audio-bar-close-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border-subtle);
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.audio-bar-close-btn:hover {
+  background: rgba(255, 255, 255, 0.16);
+}
+
+/* --------------------------------------------------------------------------
+   2. 📺 4K UHD, 8K & SMART TVS (@media (min-width: 2560px) & (min-width: 3840px))
+   -------------------------------------------------------------------------- */
+@media (min-width: 2560px) {
+  :root {
+    --app-max-width: 2200px;
+    --header-height: 80px;
+    --sidebar-width: 340px;
+    --content-padding-x: 56px;
+    --content-padding-y: 48px;
+  }
+
+  html {
+    font-size: 19px;
+  }
+
+  .app-main {
+    margin-left: var(--sidebar-width);
+    width: calc(100% - var(--sidebar-width));
+  }
+
+  .app-sidebar {
+    width: var(--sidebar-width);
+    padding: 32px 24px;
+  }
+
+  .app-content {
+    max-width: var(--app-max-width);
+    padding: var(--content-padding-y) var(--content-padding-x);
+  }
+
+  .floating-audio-bar {
+    max-width: 1100px;
+    padding: 18px 32px;
+    bottom: 36px;
+  }
+
+  .btn-primary, .btn-gold, .btn-secondary {
+    padding: 14px 28px;
+    font-size: 16px;
+    border-radius: var(--radius-lg);
+  }
+
+  .glass-panel {
+    border-radius: var(--radius-xl);
+  }
+
+  .landing-hero-title {
+    font-size: 64px !important;
+  }
+}
+
+@media (min-width: 3840px) {
+  :root {
+    --app-max-width: 3000px;
+    --header-height: 100px;
+    --sidebar-width: 420px;
+    --content-padding-x: 80px;
+    --content-padding-y: 64px;
+  }
+
+  html {
+    font-size: 24px;
+  }
+
+  .floating-audio-bar {
+    max-width: 1400px;
+    padding: 24px 44px;
+    bottom: 48px;
+  }
+
+  .landing-hero-title {
+    font-size: 84px !important;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   3. 🖥️ 2K QHD & ULTRAWIDE DISPLAYS (@media (min-width: 1921px) and (max-width: 2559px))
+   -------------------------------------------------------------------------- */
+@media (min-width: 1921px) and (max-width: 2559px) {
+  :root {
+    --app-max-width: 1800px;
+    --header-height: 72px;
+    --sidebar-width: 300px;
+    --content-padding-x: 44px;
+    --content-padding-y: 36px;
+  }
+
+  html {
+    font-size: 17px;
+  }
+
+  .app-main {
+    margin-left: var(--sidebar-width);
+    width: calc(100% - var(--sidebar-width));
+  }
+
+  .app-sidebar {
+    width: var(--sidebar-width);
+  }
+
+  .app-content {
+    max-width: var(--app-max-width);
+    padding: var(--content-padding-y) var(--content-padding-x);
+  }
+
+  .floating-audio-bar {
+    max-width: 960px;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   4. 💻 LAPTOPS & STANDARD DESKTOPS (@media (min-width: 1025px) and (max-width: 1920px))
+   -------------------------------------------------------------------------- */
+@media (min-width: 1025px) and (max-width: 1920px) {
+  .app-sidebar {
+    display: flex !important;
+    width: var(--sidebar-width);
+  }
+
+  .app-main {
+    margin-left: var(--sidebar-width);
+    width: calc(100% - var(--sidebar-width));
+    padding-bottom: 40px;
+  }
+
+  .native-apk-tabbar {
+    display: none !important;
+  }
+
+  .floating-audio-bar {
+    bottom: 24px;
+    width: calc(100% - 340px);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   5. 📟 TABLETS & IPADS (@media (min-width: 769px) and (max-width: 1024px))
+   -------------------------------------------------------------------------- */
+@media (min-width: 769px) and (max-width: 1024px) {
+  :root {
+    --header-height: 60px;
+    --content-padding-x: 20px;
+    --content-padding-y: 20px;
+  }
+
+  .app-sidebar {
+    display: none !important;
+  }
+
+  .app-main {
+    margin-left: 0 !important;
+    width: 100% !important;
+    padding-bottom: 88px;
+  }
+
+  .app-content {
+    padding: var(--content-padding-y) var(--content-padding-x);
+    max-width: 100%;
+  }
+
+  .native-apk-tabbar {
+    display: flex !important;
+    height: 70px;
+  }
+
+  .floating-audio-bar {
+    width: calc(100% - 40px) !important;
+    bottom: 84px !important;
+    padding: 10px 18px !important;
+  }
+
+  .header-desktop-actions {
+    display: none !important;
+  }
+
+  .weather-badge {
+    display: none !important;
+  }
+
+  .map-view-container {
+    flex-direction: column !important;
+  }
+
+  .map-sidebar {
+    width: 100% !important;
+    max-height: 300px !important;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   6. 📱 SMARTPHONES & PHABLETS (@media (max-width: 768px))
+   -------------------------------------------------------------------------- */
+@media (max-width: 768px) {
+  :root {
+    --header-height: 56px;
+    --content-padding-x: 12px;
+    --content-padding-y: 16px;
+  }
+
+  html {
+    font-size: 15px;
+  }
+
+  .app-sidebar {
+    display: none !important;
+  }
+
+  .app-main {
+    margin-left: 0 !important;
+    width: 100% !important;
+    padding-bottom: 84px !important;
+  }
+
+  .app-content {
+    padding: var(--content-padding-y) var(--content-padding-x) !important;
+    max-width: 100% !important;
+  }
+
+  .app-header {
+    height: var(--header-height) !important;
+    padding: 0 10px !important;
+    gap: 6px !important;
+  }
+
+  .city-selector-pill {
+    padding: 4px 8px !important;
+    gap: 5px !important;
+  }
+
+  .city-select-dropdown {
+    font-size: 12px !important;
+    max-width: 110px;
+  }
+
+  .language-selector-chip {
+    padding: 4px 8px !important;
+    gap: 4px !important;
+  }
+
+  .language-select-dropdown {
+    font-size: 11.5px !important;
+    max-width: 75px;
+  }
+
+  .header-desktop-actions {
+    display: none !important;
+  }
+
+  .weather-badge {
+    display: none !important;
+  }
+
+  .badge-live-pulse {
+    padding: 4px 8px !important;
+    font-size: 10px !important;
+  }
+
+  .header-landing-btn {
+    padding: 4px 8px !important;
+    font-size: 11px !important;
+  }
+
+  .header-landing-text {
+    display: none !important;
+  }
+
+  .admin-portal-header-pill {
+    padding: 4px 8px !important;
+    font-size: 11px !important;
+  }
+
+  .native-apk-tabbar {
+    display: flex !important;
+    height: 66px !important;
+    padding-bottom: env(safe-area-inset-bottom, 4px) !important;
+  }
+
+  .floating-audio-bar {
+    width: calc(100% - 20px) !important;
+    bottom: 76px !important;
+    padding: 8px 12px !important;
+    border-radius: var(--radius-md) !important;
+  }
+
+  .audio-bar-waveforms {
+    display: none !important;
+  }
+
+  .audio-bar-subtext {
+    display: none !important;
+  }
+
+  .audio-bar-title {
+    font-size: 12px !important;
+  }
+
+  .map-view-container {
+    flex-direction: column !important;
+  }
+
+  .map-sidebar {
+    width: 100% !important;
+    max-height: 280px !important;
+    padding: 16px !important;
+  }
+
+  .admin-dash-strip {
+    padding: 12px 14px !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 10px !important;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   7. 📱 EXTRA-COMPACT PHONES (@media (max-width: 380px))
+   -------------------------------------------------------------------------- */
+@media (max-width: 380px) {
+  :root {
+    --header-height: 52px;
+    --content-padding-x: 8px;
+    --content-padding-y: 12px;
+  }
+
+  html {
+    font-size: 14px;
+  }
+
+  .app-header {
+    height: 52px !important;
+    padding: 0 6px !important;
+    gap: 4px !important;
+  }
+
+  .city-selector-pill {
+    padding: 3px 6px !important;
+    gap: 4px !important;
+  }
+
+  .city-select-dropdown {
+    font-size: 11px !important;
+    max-width: 90px;
+  }
+
+  .language-selector-chip {
+    padding: 3px 6px !important;
+  }
+
+  .language-select-dropdown {
+    font-size: 11px !important;
+    max-width: 65px;
+  }
+
+  .badge-live-pulse {
+    display: none !important;
+  }
+
+  .admin-pill-text {
+    display: none !important;
+  }
+
+  .mobile-nav-item {
+    padding: 2px 4px !important;
+    font-size: 9.5px !important;
+  }
+
+  .mobile-nav-center-btn {
+    width: 48px !important;
+    height: 48px !important;
+  }
+
+  .center-btn-label {
+    font-size: 9px !important;
+  }
+
+  .floating-audio-bar {
+    width: calc(100% - 12px) !important;
+    bottom: 72px !important;
+    padding: 6px 10px !important;
+  }
+
+  .audio-bar-icon-box {
+    width: 32px !important;
+    height: 32px !important;
+  }
+
+  .audio-bar-title {
+    font-size: 11.5px !important;
+  }
+}
+
+/* Touch targets optimization */
+@media (pointer: coarse) {
+  button, select, input, a {
+    min-height: 40px;
+  }
+  
+  .mobile-nav-item, .mobile-nav-center-btn {
+    min-height: auto;
+  }
+}

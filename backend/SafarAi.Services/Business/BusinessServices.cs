@@ -48,39 +48,143 @@ public class AuthService : IAuthService
         _dbContext.Users.Add(user);
         await _dbContext.SaveChangesAsync();
 
-        var token = _jwtTokenGenerator.GenerateToken(user);
+        var (token, expiresAt) = _jwtTokenGenerator.GenerateAccessToken(user);
+        var rawRefreshToken = _jwtTokenGenerator.GenerateRefreshToken();
+
+        var refreshTokenEntity = new RefreshToken
+        {
+            Token = rawRefreshToken,
+            UserId = user.Id,
+            ExpiresAt = DateTime.UtcNow.AddDays(30),
+            CreatedAt = DateTime.UtcNow
+        };
+        _dbContext.RefreshTokens.Add(refreshTokenEntity);
+        await _dbContext.SaveChangesAsync();
+
         return new AuthResponseDto(
             Token: token,
+            RefreshToken: rawRefreshToken,
+            ExpiresAt: expiresAt,
             UserId: user.Id,
             Name: user.Name,
             Email: user.Email,
             Country: user.Country,
             Language: user.PreferredLanguage,
-            Role: user.Role.ToString()
+            Role: user.Role.ToString(),
+            AvatarUrl: user.AvatarUrl
         );
     }
 
     public async Task<AuthResponseDto> LoginAsync(LoginRequestDto request)
     {
-        var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.Email.ToLower() == request.Email.ToLower());
+        var identifier = (request.Email ?? "").Trim().ToLower();
+        var user = await _dbContext.Users.FirstOrDefaultAsync(u => 
+            u.Email.ToLower() == identifier || 
+            u.Name.ToLower() == identifier ||
+            u.Email.ToLower().StartsWith(identifier + "@")
+        );
+
         if (user == null || !BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
         {
-            throw new UnauthorizedAccessException("Invalid email or password.");
+            throw new UnauthorizedAccessException("Noto'g'ri login yoki parol kiritildi.");
         }
 
         user.LastLoginAt = DateTime.UtcNow;
+
+        var (token, expiresAt) = _jwtTokenGenerator.GenerateAccessToken(user);
+        var rawRefreshToken = _jwtTokenGenerator.GenerateRefreshToken();
+
+        var refreshTokenEntity = new RefreshToken
+        {
+            Token = rawRefreshToken,
+            UserId = user.Id,
+            ExpiresAt = DateTime.UtcNow.AddDays(30),
+            CreatedAt = DateTime.UtcNow
+        };
+        _dbContext.RefreshTokens.Add(refreshTokenEntity);
         await _dbContext.SaveChangesAsync();
 
-        var token = _jwtTokenGenerator.GenerateToken(user);
         return new AuthResponseDto(
             Token: token,
+            RefreshToken: rawRefreshToken,
+            ExpiresAt: expiresAt,
             UserId: user.Id,
             Name: user.Name,
             Email: user.Email,
             Country: user.Country,
             Language: user.PreferredLanguage,
-            Role: user.Role.ToString()
+            Role: user.Role.ToString(),
+            AvatarUrl: user.AvatarUrl
         );
+    }
+
+    public async Task<AuthResponseDto> RefreshTokenAsync(string refreshToken)
+    {
+        var tokenRecord = await _dbContext.RefreshTokens
+            .Include(r => r.User)
+            .FirstOrDefaultAsync(r => r.Token == refreshToken);
+
+        if (tokenRecord == null || !tokenRecord.IsActive || tokenRecord.User == null)
+        {
+            throw new UnauthorizedAccessException("Invalid, expired, or revoked refresh token.");
+        }
+
+        tokenRecord.IsRevoked = true;
+
+        var user = tokenRecord.User;
+        var (newToken, expiresAt) = _jwtTokenGenerator.GenerateAccessToken(user);
+        var newRefreshToken = _jwtTokenGenerator.GenerateRefreshToken();
+
+        tokenRecord.ReplacedByToken = newRefreshToken;
+
+        var newRefreshTokenEntity = new RefreshToken
+        {
+            Token = newRefreshToken,
+            UserId = user.Id,
+            ExpiresAt = DateTime.UtcNow.AddDays(30),
+            CreatedAt = DateTime.UtcNow
+        };
+        _dbContext.RefreshTokens.Add(newRefreshTokenEntity);
+        await _dbContext.SaveChangesAsync();
+
+        return new AuthResponseDto(
+            Token: newToken,
+            RefreshToken: newRefreshToken,
+            ExpiresAt: expiresAt,
+            UserId: user.Id,
+            Name: user.Name,
+            Email: user.Email,
+            Country: user.Country,
+            Language: user.PreferredLanguage,
+            Role: user.Role.ToString(),
+            AvatarUrl: user.AvatarUrl
+        );
+    }
+
+    public async Task<bool> LogoutAsync(string? refreshToken, Guid? userId = null)
+    {
+        if (!string.IsNullOrEmpty(refreshToken))
+        {
+            var tokenRecord = await _dbContext.RefreshTokens.FirstOrDefaultAsync(r => r.Token == refreshToken);
+            if (tokenRecord != null)
+            {
+                tokenRecord.IsRevoked = true;
+                await _dbContext.SaveChangesAsync();
+                return true;
+            }
+        }
+        else if (userId.HasValue)
+        {
+            var activeTokens = await _dbContext.RefreshTokens
+                .Where(r => r.UserId == userId.Value && !r.IsRevoked)
+                .ToListAsync();
+
+            foreach (var t in activeTokens) t.IsRevoked = true;
+            await _dbContext.SaveChangesAsync();
+            return true;
+        }
+
+        return false;
     }
 
     public async Task<UserProfileDto> GetProfileAsync(Guid userId)
@@ -106,7 +210,9 @@ public class AuthService : IAuthService
             PreferredStyle: user.PreferredStyle.ToString(),
             PreferredTransport: user.PreferredTransport.ToString(),
             SavedPlacesCount: user.SavedPlaces.Count,
-            TripsCount: user.Trips.Count
+            TripsCount: user.Trips.Count,
+            AvatarUrl: user.AvatarUrl,
+            CreatedAt: user.CreatedAt
         );
     }
 
@@ -126,6 +232,7 @@ public class AuthService : IAuthService
         user.Country = request.Country;
         user.PreferredLanguage = request.PreferredLanguage;
         user.PreferredInterests = request.PreferredInterests;
+        if (!string.IsNullOrEmpty(request.AvatarUrl)) user.AvatarUrl = request.AvatarUrl;
 
         if (Enum.TryParse<TravelStyle>(request.PreferredStyle, true, out var style)) user.PreferredStyle = style;
         if (Enum.TryParse<TransportMode>(request.PreferredTransport, true, out var transport)) user.PreferredTransport = transport;
@@ -143,7 +250,9 @@ public class AuthService : IAuthService
             PreferredStyle: user.PreferredStyle.ToString(),
             PreferredTransport: user.PreferredTransport.ToString(),
             SavedPlacesCount: user.SavedPlaces.Count,
-            TripsCount: user.Trips.Count
+            TripsCount: user.Trips.Count,
+            AvatarUrl: user.AvatarUrl,
+            CreatedAt: user.CreatedAt
         );
     }
 }
@@ -152,16 +261,25 @@ public class PlaceService : IPlaceService
 {
     private readonly ApplicationDbContext _dbContext;
     private readonly IMapService _mapService;
+    private readonly ICacheService _cacheService;
 
-    public PlaceService(ApplicationDbContext dbContext, IMapService mapService)
+    public PlaceService(
+        ApplicationDbContext dbContext,
+        IMapService mapService,
+        ICacheService cacheService)
     {
         _dbContext = dbContext;
         _mapService = mapService;
+        _cacheService = cacheService;
     }
 
     public async Task<List<DestinationDto>> GetDestinationsAsync()
     {
-        return await _dbContext.Destinations
+        const string cacheKey = "destinations_all";
+        var cached = await _cacheService.GetAsync<List<DestinationDto>>(cacheKey);
+        if (cached != null) return cached;
+
+        var list = await _dbContext.Destinations
             .Include(d => d.Places)
             .Select(d => new DestinationDto(
                 d.Id,
@@ -175,6 +293,36 @@ public class PlaceService : IPlaceService
                 d.PopularityScore
             ))
             .ToListAsync();
+
+        await _cacheService.SetAsync(cacheKey, list, TimeSpan.FromMinutes(30));
+        return list;
+    }
+
+    public async Task<PagedResult<DestinationDto>> GetDestinationsPagedAsync(PaginationQuery query)
+    {
+        var page = Math.Max(1, query.PageNumber);
+        var pageSize = Math.Clamp(query.PageSize, 1, 50);
+
+        var totalCount = await _dbContext.Destinations.CountAsync();
+        var items = await _dbContext.Destinations
+            .Include(d => d.Places)
+            .OrderByDescending(d => d.PopularityScore)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .Select(d => new DestinationDto(
+                d.Id,
+                d.Name,
+                d.Region,
+                d.Description,
+                d.ImageUrl,
+                d.Latitude,
+                d.Longitude,
+                d.Places.Count,
+                d.PopularityScore
+            ))
+            .ToListAsync();
+
+        return PagedResult<DestinationDto>.Create(items, page, pageSize, totalCount);
     }
 
     public async Task<DestinationDto?> GetDestinationByIdAsync(Guid id)
@@ -219,8 +367,77 @@ public class PlaceService : IPlaceService
         }
 
         var list = await query.ToListAsync();
-
         return list.Select(p => MapToDto(p)).ToList();
+    }
+
+    public async Task<PagedResult<PlaceDto>> GetPlacesPagedAsync(PlaceFilterRequestDto filter)
+    {
+        var page = Math.Max(1, filter.PageNumber);
+        var pageSize = Math.Clamp(filter.PageSize, 1, 50);
+
+        var query = _dbContext.Places
+            .Include(p => p.Destination)
+            .Include(p => p.Category)
+            .AsQueryable();
+
+        // 1. Filter by City
+        if (!string.IsNullOrWhiteSpace(filter.City))
+        {
+            query = query.Where(p => p.Destination!.Name.ToLower() == filter.City.ToLower());
+        }
+
+        // 2. Filter by Category Type
+        if (filter.CategoryType.HasValue)
+        {
+            query = query.Where(p => p.Category != null && p.Category.Type == filter.CategoryType.Value);
+        }
+
+        // 3. Filter by Search Text
+        if (!string.IsNullOrWhiteSpace(filter.Search))
+        {
+            var s = filter.Search.ToLower();
+            query = query.Where(p =>
+                p.Name.ToLower().Contains(s) ||
+                p.LocalName.ToLower().Contains(s) ||
+                p.ShortDescription.ToLower().Contains(s) ||
+                (p.Category != null && p.Category.Name.ToLower().Contains(s)));
+        }
+
+        // 4. Filter by Price Range
+        if (filter.MinPrice.HasValue)
+        {
+            query = query.Where(p => p.TicketPriceUzs >= filter.MinPrice.Value);
+        }
+        if (filter.MaxPrice.HasValue)
+        {
+            query = query.Where(p => p.TicketPriceUzs <= filter.MaxPrice.Value);
+        }
+
+        // 5. Filter by Min Rating
+        if (filter.MinRating.HasValue)
+        {
+            query = query.Where(p => p.Rating >= filter.MinRating.Value);
+        }
+
+        // 6. Sorting
+        query = filter.SortBy?.ToLower() switch
+        {
+            "price_asc" => query.OrderBy(p => p.TicketPriceUzs),
+            "price_desc" => query.OrderByDescending(p => p.TicketPriceUzs),
+            "rating_desc" => query.OrderByDescending(p => p.Rating),
+            "name_asc" => query.OrderBy(p => p.Name),
+            "popular" => query.OrderByDescending(p => p.ReviewCount),
+            _ => query.OrderByDescending(p => p.IsMustVisit).ThenByDescending(p => p.Rating)
+        };
+
+        var totalCount = await query.CountAsync();
+        var rawPlaces = await query
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        var items = rawPlaces.Select(p => MapToDto(p)).ToList();
+        return PagedResult<PlaceDto>.Create(items, page, pageSize, totalCount);
     }
 
     public async Task<PlaceDto?> GetPlaceByIdAsync(Guid id)
@@ -251,23 +468,23 @@ public class PlaceService : IPlaceService
                 var (walkMins, _, _, _) = _mapService.EstimateTransit(distKm);
 
                 nearbyList.Add(new NearbyPlaceDto(
-                    Id: p.Id,
-                    Name: p.Name,
-                    Category: p.Category?.Name ?? "Attraction",
-                    Icon: p.Category?.Icon ?? "landmark",
-                    Latitude: p.Latitude,
-                    Longitude: p.Longitude,
-                    DistanceMeters: distMeters,
-                    FormattedDistance: formattedDist,
-                    ImageUrl: p.ImageUrl,
-                    Rating: p.Rating,
-                    TicketPriceUzs: p.TicketPriceUzs,
-                    EstimatedWalkTime: $"{walkMins} min walk"
+                    p.Id,
+                    p.Name,
+                    p.Category != null ? p.Category.Name : "Landmark",
+                    p.Category != null ? p.Category.Icon : "landmark",
+                    p.Latitude,
+                    p.Longitude,
+                    distMeters,
+                    formattedDist,
+                    p.ImageUrl,
+                    p.Rating,
+                    p.TicketPriceUzs,
+                    $"{walkMins} min walk"
                 ));
             }
         }
 
-        return nearbyList.OrderBy(p => p.DistanceMeters).ToList();
+        return nearbyList.OrderBy(n => n.DistanceMeters).ToList();
     }
 
     public async Task<List<ReviewDto>> GetReviewsByPlaceIdAsync(Guid placeId)
@@ -279,8 +496,8 @@ public class PlaceService : IPlaceService
             .Select(r => new ReviewDto(
                 r.Id,
                 r.PlaceId,
-                r.User != null ? r.User.Name : "Visitor",
-                r.TouristCountry,
+                r.User != null ? r.User.Name : "Anonymous Traveler",
+                r.User != null ? r.User.Country : "Uzbekistan",
                 r.Rating,
                 r.Comment,
                 r.CreatedAt
@@ -290,8 +507,8 @@ public class PlaceService : IPlaceService
 
     public async Task<ReviewDto> AddReviewAsync(Guid userId, CreateReviewRequestDto request)
     {
-        var user = await _dbContext.Users.FindAsync(userId) ?? throw new KeyNotFoundException("User not found");
-        var place = await _dbContext.Places.FindAsync(request.PlaceId) ?? throw new KeyNotFoundException("Place not found");
+        var user = await _dbContext.Users.FindAsync(userId);
+        if (user == null) throw new KeyNotFoundException("User not found.");
 
         var review = new Review
         {
@@ -299,12 +516,19 @@ public class PlaceService : IPlaceService
             UserId = userId,
             Rating = Math.Clamp(request.Rating, 1, 5),
             Comment = request.Comment,
-            TouristCountry = user.Country,
             CreatedAt = DateTime.UtcNow
         };
 
         _dbContext.Reviews.Add(review);
-        place.ReviewCount++;
+
+        var place = await _dbContext.Places.FindAsync(request.PlaceId);
+        if (place != null)
+        {
+            var currentTotal = place.Rating * place.ReviewCount;
+            place.ReviewCount += 1;
+            place.Rating = Math.Round((currentTotal + review.Rating) / place.ReviewCount, 1);
+        }
+
         await _dbContext.SaveChangesAsync();
 
         return new ReviewDto(
@@ -320,26 +544,26 @@ public class PlaceService : IPlaceService
 
     public async Task<List<PlaceDto>> GetSavedPlacesAsync(Guid userId)
     {
-        var savedPlaces = await _dbContext.SavedPlaces
-            .Where(sp => sp.UserId == userId)
-            .Include(sp => sp.Place)
-                .ThenInclude(p => p.Destination)
-            .Include(sp => sp.Place)
-                .ThenInclude(p => p.Category)
-            .Select(sp => sp.Place!)
+        return await _dbContext.SavedPlaces
+            .Where(s => s.UserId == userId)
+            .Include(s => s.Place)
+                .ThenInclude(p => p!.Destination)
+            .Include(s => s.Place)
+                .ThenInclude(p => p!.Category)
+            .Select(s => MapToDto(s.Place!))
             .ToListAsync();
-
-        return savedPlaces.Select(p => MapToDto(p)).ToList();
     }
 
     public async Task<bool> ToggleSavePlaceAsync(Guid userId, Guid placeId)
     {
-        var existing = await _dbContext.SavedPlaces.FirstOrDefaultAsync(sp => sp.UserId == userId && sp.PlaceId == placeId);
+        var existing = await _dbContext.SavedPlaces
+            .FirstOrDefaultAsync(s => s.UserId == userId && s.PlaceId == placeId);
+
         if (existing != null)
         {
             _dbContext.SavedPlaces.Remove(existing);
             await _dbContext.SaveChangesAsync();
-            return false; // Removed
+            return false;
         }
 
         _dbContext.SavedPlaces.Add(new SavedPlace
@@ -349,23 +573,35 @@ public class PlaceService : IPlaceService
             SavedAt = DateTime.UtcNow
         });
         await _dbContext.SaveChangesAsync();
-        return true; // Added
+        return true;
     }
 
     private static PlaceDto MapToDto(Place p)
     {
-        var facts = new List<string>();
-        var gallery = new List<string>();
-        try { facts = JsonSerializer.Deserialize<List<string>>(p.InterestingFacts) ?? new(); } catch { }
-        try { gallery = JsonSerializer.Deserialize<List<string>>(p.ImageGalleryJson) ?? new(); } catch { }
+        List<string> gallery = new();
+        List<string> facts = new();
+
+        try
+        {
+            if (!string.IsNullOrEmpty(p.ImageGalleryJson))
+                gallery = JsonSerializer.Deserialize<List<string>>(p.ImageGalleryJson) ?? new();
+            if (!string.IsNullOrEmpty(p.InterestingFacts))
+            {
+                if (p.InterestingFacts.TrimStart().StartsWith("["))
+                    facts = JsonSerializer.Deserialize<List<string>>(p.InterestingFacts) ?? new();
+                else
+                    facts = p.InterestingFacts.Split(new[] { '\n', ';' }, StringSplitOptions.RemoveEmptyEntries).Select(f => f.Trim()).ToList();
+            }
+        }
+        catch { }
 
         return new PlaceDto(
             p.Id,
             p.Name,
             p.LocalName,
-            p.Destination?.Name ?? "Samarkand",
-            p.Category?.Name ?? "Historical Landmark",
-            p.Category?.Type ?? PlaceCategoryType.HistoricalLandmark,
+            p.Destination != null ? p.Destination.Name : "Samarkand",
+            p.Category != null ? p.Category.Name : "Historic",
+            p.Category != null ? p.Category.Type : PlaceCategoryType.HistoricalLandmark,
             p.ShortDescription,
             p.DetailedHistory,
             p.ArchitectureDetails,
@@ -406,41 +642,54 @@ public class TripService : ITripService
             DestinationName = request.DestinationName,
             NumberOfDays = request.NumberOfDays,
             TotalBudgetUzs = request.TotalBudgetUzs,
+            Interests = request.Interests,
+            Language = request.Language,
+            AiSummary = request.PlanDetails.AiSummary,
             EstimatedSpentUzs = request.PlanDetails.EstimatedSpentUzs,
             TotalDistanceKm = request.PlanDetails.TotalDistanceKm,
-            Interests = request.Interests,
-            AiSummary = request.PlanDetails.AiSummary,
-            Language = request.Language,
             CreatedAt = DateTime.UtcNow
         };
 
-        foreach (var dayDto in request.PlanDetails.Days)
+        if (Enum.TryParse<TravelStyle>(request.Style, true, out var style)) trip.Style = style;
+        if (Enum.TryParse<TransportMode>(request.Transportation, true, out var transport)) trip.PreferredTransport = transport;
+
+        if (request.PlanDetails.Days != null)
         {
-            var day = new TripDay
+            foreach (var dayDto in request.PlanDetails.Days)
             {
-                DayNumber = dayDto.DayNumber,
-                Title = dayDto.Title,
-                Summary = dayDto.Summary
-            };
-
-            foreach (var actDto in dayDto.Activities)
-            {
-                day.Activities.Add(new TripActivity
+                var day = new TripDay
                 {
-                    Order = actDto.Order,
-                    TimeSlot = actDto.TimeSlot,
-                    PlaceId = actDto.PlaceId,
-                    ActivityTitle = actDto.ActivityTitle,
-                    Description = actDto.Description,
-                    Latitude = actDto.Latitude,
-                    Longitude = actDto.Longitude,
-                    DurationMinutes = actDto.DurationMinutes,
-                    DistanceFromPreviousKm = actDto.DistanceFromPreviousKm,
-                    EstimatedCostUzs = actDto.EstimatedCostUzs
-                });
-            }
+                    DayNumber = dayDto.DayNumber,
+                    Title = dayDto.Title,
+                    Summary = dayDto.Summary
+                };
 
-            trip.Days.Add(day);
+                if (dayDto.Activities != null)
+                {
+                    foreach (var act in dayDto.Activities)
+                    {
+                        var transitMode = TransportMode.Walking;
+                        if (Enum.TryParse<TransportMode>(act.TransitMode, true, out var tm)) transitMode = tm;
+
+                        day.Activities.Add(new TripActivity
+                        {
+                            Order = act.Order,
+                            TimeSlot = act.TimeSlot,
+                            PlaceId = act.PlaceId,
+                            ActivityTitle = act.ActivityTitle,
+                            Description = act.Description,
+                            Latitude = act.Latitude,
+                            Longitude = act.Longitude,
+                            DurationMinutes = act.DurationMinutes,
+                            DistanceFromPreviousKm = act.DistanceFromPreviousKm,
+                            EstimatedCostUzs = act.EstimatedCostUzs,
+                            TransitMode = transitMode
+                        });
+                    }
+                }
+
+                trip.Days.Add(day);
+            }
         }
 
         _dbContext.Trips.Add(trip);
@@ -452,9 +701,9 @@ public class TripService : ITripService
     public async Task<List<TripSummaryDto>> GetUserTripsAsync(Guid userId)
     {
         return await _dbContext.Trips
-            .Where(t => t.UserId == userId)
             .Include(t => t.Days)
                 .ThenInclude(d => d.Activities)
+            .Where(t => t.UserId == userId)
             .OrderByDescending(t => t.CreatedAt)
             .Select(t => new TripSummaryDto(
                 t.Id,
@@ -501,22 +750,23 @@ public class AdminService : IAdminService
     public async Task<AdminDashboardStatsDto> GetDashboardStatsAsync()
     {
         var totalUsers = await _dbContext.Users.CountAsync();
-        var totalPlaces = await _dbContext.Places.CountAsync();
         var totalDestinations = await _dbContext.Destinations.CountAsync();
+        var totalPlaces = await _dbContext.Places.CountAsync();
         var totalTrips = await _dbContext.Trips.CountAsync();
 
         var touristCountries = new List<CountryStatDto>
         {
-            new("Germany", 34, 28.5),
-            new("United Kingdom", 22, 18.3),
-            new("United States", 19, 15.8),
-            new("France", 15, 12.5),
-            new("Turkey", 14, 11.7),
-            new("Japan", 9, 7.5),
-            new("South Korea", 7, 5.7)
+            new("Germany", 340, 28.5),
+            new("France", 260, 21.8),
+            new("United States", 190, 15.9),
+            new("Japan", 145, 12.1),
+            new("South Korea", 120, 10.0),
+            new("Turkey", 95, 7.9),
+            new("United Kingdom", 45, 3.8)
         };
 
         var topVisited = await _dbContext.Places
+            .Include(p => p.Destination)
             .OrderByDescending(p => p.ReviewCount)
             .Take(5)
             .Select(p => new PopularPlaceStatDto(p.Name, p.Destination != null ? p.Destination.Name : "Samarkand", p.ReviewCount * 12, p.Rating))
@@ -574,8 +824,92 @@ public class AdminService : IAdminService
                 u.PreferredStyle.ToString(),
                 u.PreferredTransport.ToString(),
                 u.SavedPlaces.Count,
-                u.Trips.Count
+                u.Trips.Count,
+                u.AvatarUrl,
+                u.CreatedAt
             ))
             .ToListAsync();
+    }
+
+    public async Task<PagedResult<UserProfileDto>> GetUsersPagedAsync(string? search = null, string? role = null, int page = 1, int pageSize = 10)
+    {
+        page = Math.Max(1, page);
+        pageSize = Math.Clamp(pageSize, 1, 50);
+
+        var query = _dbContext.Users
+            .Include(u => u.SavedPlaces)
+            .Include(u => u.Trips)
+            .AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var s = search.ToLower();
+            query = query.Where(u => u.Name.ToLower().Contains(s) || u.Email.ToLower().Contains(s) || u.Country.ToLower().Contains(s));
+        }
+
+        if (!string.IsNullOrWhiteSpace(role) && Enum.TryParse<UserRole>(role, true, out var r))
+        {
+            query = query.Where(u => u.Role == r);
+        }
+
+        var totalCount = await query.CountAsync();
+        var users = await query
+            .OrderByDescending(u => u.CreatedAt)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .Select(u => new UserProfileDto(
+                u.Id,
+                u.Name,
+                u.Email,
+                u.Country,
+                u.PreferredLanguage,
+                u.Role.ToString(),
+                u.PreferredInterests,
+                u.PreferredStyle.ToString(),
+                u.PreferredTransport.ToString(),
+                u.SavedPlaces.Count,
+                u.Trips.Count,
+                u.AvatarUrl,
+                u.CreatedAt
+            ))
+            .ToListAsync();
+
+        return PagedResult<UserProfileDto>.Create(users, page, pageSize, totalCount);
+    }
+
+    public async Task<bool> DeleteUserAsync(Guid userId, Guid requestingAdminId)
+    {
+        if (userId == requestingAdminId)
+        {
+            throw new InvalidOperationException("Administrator cannot delete their own active account.");
+        }
+
+        var user = await _dbContext.Users
+            .Include(u => u.Trips)
+            .Include(u => u.Reviews)
+            .Include(u => u.SavedPlaces)
+            .Include(u => u.RefreshTokens)
+            .FirstOrDefaultAsync(u => u.Id == userId);
+
+        if (user == null) return false;
+
+        _dbContext.Users.Remove(user);
+        await _dbContext.SaveChangesAsync();
+        return true;
+    }
+
+    public async Task<bool> UpdateUserRoleAsync(Guid userId, string newRole)
+    {
+        var user = await _dbContext.Users.FindAsync(userId);
+        if (user == null) return false;
+
+        if (Enum.TryParse<UserRole>(newRole, true, out var role))
+        {
+            user.Role = role;
+            await _dbContext.SaveChangesAsync();
+            return true;
+        }
+
+        return false;
     }
 }

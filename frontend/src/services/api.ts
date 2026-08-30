@@ -6,7 +6,8 @@ import {
   AiTripPlan,
   RouteCalculation,
   AdminStats,
-  User
+  User,
+  UserProfile
 } from '../types';
 
 const API_BASE_URL = 'http://localhost:5000/api';
@@ -19,80 +20,195 @@ const getHeaders = () => {
   };
 };
 
+async function customFetch(url: string, options: RequestInit = {}): Promise<Response> {
+  const token = localStorage.getItem('safar_token');
+  const refreshToken = localStorage.getItem('safar_refresh_token');
+
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...(options.headers as Record<string, string> || {})
+  };
+  if (token && !headers['Authorization']) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  let res = await fetch(url, { ...options, headers });
+
+  // Automatic JWT refresh if 401 Unauthorized
+  if (res.status === 401 && refreshToken) {
+    try {
+      const refreshRes = await fetch(`${API_BASE_URL}/auth/refresh-token`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refreshToken })
+      });
+
+      if (refreshRes.ok) {
+        const data = await refreshRes.json();
+        localStorage.setItem('safar_token', data.token);
+        if (data.refreshToken) localStorage.setItem('safar_refresh_token', data.refreshToken);
+
+        headers['Authorization'] = `Bearer ${data.token}`;
+        res = await fetch(url, { ...options, headers });
+      } else {
+        localStorage.removeItem('safar_token');
+        localStorage.removeItem('safar_refresh_token');
+        localStorage.removeItem('safar_user');
+      }
+    } catch {
+      // Refresh error ignored
+    }
+  }
+
+  return res;
+}
+
 export const api = {
   // Auth
   async login(email: string, password: string) {
-    try {
-      const res = await fetch(`${API_BASE_URL}/auth/login`, {
-        method: 'POST',
-        headers: getHeaders(),
-        body: JSON.stringify({ email, password })
-      });
-      if (res.ok) return await res.json();
-    } catch (e) {
-      console.warn('API error, using demo auth fallback:', e);
+    const res = await fetch(`${API_BASE_URL}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
+    });
+    if (!res.ok) {
+      const errorData = await res.json().catch(() => ({}));
+      throw new Error(errorData.message || 'Noto\'g\'ri email yoki parol kiritildi (Invalid credentials).');
     }
-    // Fallback demo auth
-    const isSpecialAdmin = email.toLowerCase().includes('admin');
-    return {
-      token: 'demo-jwt-token-safar-ai',
-      userId: isSpecialAdmin ? '00000000-0000-0000-0000-000000000001' : '00000000-0000-0000-0000-000000000002',
-      name: isSpecialAdmin ? 'Safar Admin' : 'Alexander Miller',
-      email: email,
-      country: 'Germany',
-      language: 'en',
-      role: isSpecialAdmin ? 'Admin' : 'User'
-    };
+    const data = await res.json();
+    if (data.token) localStorage.setItem('safar_token', data.token);
+    if (data.refreshToken) localStorage.setItem('safar_refresh_token', data.refreshToken);
+    return data;
   },
 
   async register(name: string, email: string, password: string, country: string, language: string) {
+    const res = await fetch(`${API_BASE_URL}/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, email, password, country, language })
+    });
+    if (!res.ok) {
+      const errorData = await res.json().catch(() => ({}));
+      throw new Error(errorData.message || 'Ro\'yxatdan o\'tishda xatolik yuz berdi (Registration failed).');
+    }
+    const data = await res.json();
+    if (data.token) localStorage.setItem('safar_token', data.token);
+    if (data.refreshToken) localStorage.setItem('safar_refresh_token', data.refreshToken);
+    return data;
+  },
+
+  async logout() {
     try {
-      const res = await fetch(`${API_BASE_URL}/auth/register`, {
+      const refreshToken = localStorage.getItem('safar_refresh_token');
+      await customFetch(`${API_BASE_URL}/auth/logout`, {
         method: 'POST',
-        headers: getHeaders(),
-        body: JSON.stringify({ name, email, password, country, language })
+        body: JSON.stringify({ refreshToken })
       });
+    } catch (e) {
+      console.warn('Logout API warning:', e);
+    } finally {
+      localStorage.removeItem('safar_token');
+      localStorage.removeItem('safar_refresh_token');
+      localStorage.removeItem('safar_user');
+    }
+  },
+
+  async getAdminUsers(): Promise<UserProfile[]> {
+    try {
+      const res = await customFetch(`${API_BASE_URL}/admin/users`);
       if (res.ok) return await res.json();
     } catch (e) {
-      console.warn('API error, using demo register fallback:', e);
+      console.warn('API getAdminUsers error:', e);
     }
-    return {
-      token: 'demo-jwt-token-safar-ai',
-      userId: '00000000-0000-0000-0000-000000000002',
-      name,
-      email,
-      country,
-      language,
-      role: 'User'
-    };
+    return [];
+  },
+
+  async getAdminUsersPaged(search?: string, role?: string, page = 1, pageSize = 10) {
+    try {
+      const params = new URLSearchParams();
+      if (search) params.append('search', search);
+      if (role && role !== 'All') params.append('role', role);
+      params.append('page', page.toString());
+      params.append('pageSize', pageSize.toString());
+
+      const res = await customFetch(`${API_BASE_URL}/admin/users/paged?${params.toString()}`);
+      if (res.ok) return await res.json();
+    } catch (e) {
+      console.warn('API getAdminUsersPaged error:', e);
+    }
+    return { items: [], totalCount: 0, totalPages: 1, pageNumber: page, pageSize, hasPreviousPage: false, hasNextPage: false };
+  },
+
+  async deleteAdminUser(userId: string): Promise<boolean> {
+    const res = await customFetch(`${API_BASE_URL}/admin/users/${userId}`, {
+      method: 'DELETE'
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.message || 'Foydalanuvchini o\'chirishda xatolik yuz berdi');
+    }
+    return true;
+  },
+
+  async updateAdminUserRole(userId: string, role: string): Promise<boolean> {
+    const res = await customFetch(`${API_BASE_URL}/admin/users/${userId}/role`, {
+      method: 'PUT',
+      body: JSON.stringify({ role })
+    });
+    return res.ok;
+  },
+
+  // File & Avatar Upload (Multipart Form Data)
+  async uploadImage(file: File, folder = 'places') {
+    const token = localStorage.getItem('safar_token');
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const res = await fetch(`${API_BASE_URL}/upload/image?folder=${encodeURIComponent(folder)}`, {
+      method: 'POST',
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      body: formData
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.message || 'Rasm yuklashda xatolik');
+    }
+    return await res.json();
+  },
+
+  async uploadAvatar(file: File) {
+    const token = localStorage.getItem('safar_token');
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const res = await fetch(`${API_BASE_URL}/upload/avatar`, {
+      method: 'POST',
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      body: formData
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.message || 'Avatar yuklashda xatolik');
+    }
+    return await res.json();
   },
 
   async getProfile() {
     try {
-      const res = await fetch(`${API_BASE_URL}/auth/me`, { headers: getHeaders() });
+      const res = await customFetch(`${API_BASE_URL}/auth/me`);
       if (res.ok) return await res.json();
     } catch (e) {
       console.warn('API profile error:', e);
     }
-    return {
-      id: '00000000-0000-0000-0000-000000000002',
-      name: 'Alexander Miller',
-      email: 'tourist@safarai.com',
-      country: 'Germany',
-      preferredLanguage: 'en',
-      role: 'User',
-      preferredInterests: 'History, Silk Road Architecture, Uzbek Food',
-      preferredStyle: 'Balanced',
-      preferredTransport: 'Walking',
-      savedPlacesCount: 3,
-      tripsCount: 2
-    };
+    return null;
   },
 
   // Destinations & Places
   async getDestinations(): Promise<Destination[]> {
     try {
-      const res = await fetch(`${API_BASE_URL}/destinations`, { headers: getHeaders() });
+      const res = await customFetch(`${API_BASE_URL}/destinations`);
       if (res.ok) return await res.json();
     } catch (e) {
       console.warn('API destinations error, using fallback:', e);
@@ -103,7 +219,7 @@ export const api = {
         name: 'Samarkand',
         region: 'Samarkand Region',
         description: 'The Pearl of the Silk Road, renowned for Registan Square, turquoise ribbed domes, and 2,750 years of history.',
-        imageUrl: 'https://images.unsplash.com/photo-1596484552834-6a58f850e0a1?auto=format&fit=crop&w=1200&q=80',
+        imageUrl: 'https://images.unsplash.com/photo-1628151015968-3a4429e9ef04?auto=format&fit=crop&w=1200&q=80',
         latitude: 39.6547,
         longitude: 66.9758,
         placesCount: 9,
@@ -261,12 +377,43 @@ export const api = {
       if (city) params.append('city', city);
       if (category) params.append('category', category);
       if (search) params.append('search', search);
-      const res = await fetch(`${API_BASE_URL}/places?${params.toString()}`, { headers: getHeaders() });
+
+      const res = await customFetch(`${API_BASE_URL}/places?${params.toString()}`);
       if (res.ok) return await res.json();
     } catch (e) {
       console.warn('API places error, using fallback:', e);
     }
     return FALLBACK_PLACES;
+  },
+
+  async getPlacesPaged(filter: import('../types').PlaceFilterRequest = {}) {
+    try {
+      const params = new URLSearchParams();
+      if (filter.city) params.append('city', filter.city);
+      if (filter.search) params.append('search', filter.search);
+      if (filter.categoryType !== undefined) params.append('categoryType', filter.categoryType.toString());
+      if (filter.minPrice !== undefined) params.append('minPrice', filter.minPrice.toString());
+      if (filter.maxPrice !== undefined) params.append('maxPrice', filter.maxPrice.toString());
+      if (filter.minRating !== undefined) params.append('minRating', filter.minRating.toString());
+      if (filter.sortBy) params.append('sortBy', filter.sortBy);
+      if (filter.pageNumber) params.append('pageNumber', filter.pageNumber.toString());
+      if (filter.pageSize) params.append('pageSize', filter.pageSize.toString());
+
+      const res = await customFetch(`${API_BASE_URL}/places/paged?${params.toString()}`);
+      if (res.ok) return await res.json();
+    } catch (e) {
+      console.warn('API getPlacesPaged error, using fallback:', e);
+    }
+    const all = await this.getPlaces(filter.city, undefined, filter.search);
+    return {
+      items: all,
+      totalCount: all.length,
+      totalPages: 1,
+      pageNumber: filter.pageNumber || 1,
+      pageSize: filter.pageSize || 10,
+      hasPreviousPage: false,
+      hasNextPage: false
+    };
   },
 
   async getPlaceById(id: string): Promise<Place> {
@@ -419,7 +566,7 @@ export const api = {
               distanceFromPreviousKm: 0,
               estimatedCostUzs: 50000,
               transitMode: 'Walking',
-              imageUrl: 'https://images.unsplash.com/photo-1596484552834-6a58f850e0a1?auto=format&fit=crop&w=1200&q=80'
+              imageUrl: 'https://images.unsplash.com/photo-1628151015968-3a4429e9ef04?auto=format&fit=crop&w=1200&q=80'
             },
             {
               order: 2,
@@ -540,8 +687,16 @@ export const api = {
     } catch (e) {
       console.warn('API chat error:', e);
     }
+    const m = (message || '').toLowerCase().trim();
+    if (m === 'salom' || m.startsWith('salom') || m.includes('assalom') || m === 'hi' || m === 'hello' || m.includes('privet') || m.includes('привет')) {
+      return {
+        reply: "Assalomu alaykum! Xush kelibsiz. 😊\n\nMen Safar AI — sizning shaxsiy aqlli sayohat yo'riqchingizman. O'zbekistonning barcha 14 ta viloyati, Samarqand, Buxoro, Xiva va Toshkent bo'yicha qanday yordam bera olaman?",
+        language,
+        suggestedFollowUps: ['Samarqanddagi eng mashhur 5 ta joy', 'Eng mazali Samarqand oshi qayerda?', 'Afrosiyob poyezd chiptasini olish']
+      };
+    }
     return {
-      reply: `### 🏛️ **SAFAR AI Gidi**\n\nSizning savolingiz: *"${message}"*\n\nO'zbekistonning barcha 14 ta viloyati bo'yicha tarixiy obidalar, muzeylar, mazali milliy taomlar, poyezdlar va xarajatlar haqida batafsil ma'lumot berishga tayyorman!`,
+      reply: `O'zbekiston bo'yicha sayohatingizda sizga yordam berishga tayyorman! 🌍\n\n• Tarixiy obidalar (Samarqand Registoni, Buxoro Minorai Kaloni, Xiva)\n• Milliy taomlar (Samarqand oshi, Toshkent to'y oshi, Somsa)\n• Logistika (Afrosiyob poyezdlari, taksi va mehmonxonalar)\n\nIstalgan savolingizni berishingiz mumkin!`,
       language,
       suggestedFollowUps: ['Samarqand va Buxoroga 3 kunlik marshrut', 'Eng mazali Samarqand oshi qayerda?', 'Toshkent metropoliteni tarixi']
     };
@@ -622,7 +777,7 @@ export const api = {
         'Ulugh Beg personally lectured mathematics and astronomy here.'
       ],
       audioGuideScript: 'Welcome to Registan Square. Standing before you are three monumental madrasahs framing this historic plaza. Observe the ferocious solar tigers on Sher-Dor Madrasah to your right.',
-      imageUrl: 'https://images.unsplash.com/photo-1596484552834-6a58f850e0a1?auto=format&fit=crop&w=1200&q=80',
+      imageUrl: 'https://images.unsplash.com/photo-1628151015968-3a4429e9ef04?auto=format&fit=crop&w=1200&q=80',
       latitude: 39.6547,
       longitude: 66.9758
     };
@@ -686,6 +841,18 @@ export const api = {
         { latitude: endLat, longitude: endLon, label: 'End' }
       ]
     };
+  },
+
+  async getLiveTrains(from: string, to: string, date?: string) {
+    try {
+      const p = new URLSearchParams({ from, to });
+      if (date) p.append('date', date);
+      const res = await fetch(`${API_BASE_URL}/transport/trains/live?${p.toString()}`);
+      if (res.ok) return await res.json();
+    } catch (e) {
+      console.warn('API live trains error:', e);
+    }
+    return null;
   },
 
   async getAdminStats(): Promise<AdminStats> {
@@ -757,9 +924,9 @@ export const FALLBACK_PLACES: Place[] = [
     latitude: 39.6547,
     longitude: 66.9758,
     address: 'Registan St, Samarkand',
-    imageUrl: 'https://images.unsplash.com/photo-1596484552834-6a58f850e0a1?auto=format&fit=crop&w=1200&q=80',
+    imageUrl: 'https://images.unsplash.com/photo-1628151015968-3a4429e9ef04?auto=format&fit=crop&w=1200&q=80',
     imageGallery: [
-      'https://images.unsplash.com/photo-1596484552834-6a58f850e0a1?auto=format&fit=crop&w=1200&q=80',
+      'https://images.unsplash.com/photo-1628151015968-3a4429e9ef04?auto=format&fit=crop&w=1200&q=80',
       'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?auto=format&fit=crop&w=1200&q=80'
     ],
     ticketPriceUzs: 50000,
@@ -868,8 +1035,8 @@ export const FALLBACK_PLACES: Place[] = [
     latitude: 39.6595,
     longitude: 66.9812,
     address: 'Bibikhonim St, Samarkand',
-    imageUrl: 'https://images.unsplash.com/photo-1596484552834-6a58f850e0a1?auto=format&fit=crop&w=1200&q=80',
-    imageGallery: ['https://images.unsplash.com/photo-1596484552834-6a58f850e0a1?auto=format&fit=crop&w=1200&q=80'],
+    imageUrl: 'https://images.unsplash.com/photo-1578749556568-bc2c40e68b61?auto=format&fit=crop&w=1200&q=80',
+    imageGallery: ['https://images.unsplash.com/photo-1578749556568-bc2c40e68b61?auto=format&fit=crop&w=1200&q=80'],
     ticketPriceUzs: 0,
     openingHours: '07:00 - 19:00',
     recommendedVisitDurationMinutes: 60,

@@ -7,14 +7,20 @@ using SafarAi.Core.Interfaces;
 using SafarAi.Infrastructure.Data;
 using SafarAi.Infrastructure.Security;
 using SafarAi.Services.AI;
+using SafarAi.Services.Background;
 using SafarAi.Services.Business;
+using SafarAi.Services.Cache;
+using SafarAi.Services.Hubs;
 using SafarAi.Services.Map;
+using SafarAi.Services.Storage;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // 1. Add Services to the container
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSignalR();
+builder.Services.AddDistributedMemoryCache();
 
 // 2. Swagger Configuration
 builder.Services.AddSwaggerGen(c =>
@@ -85,14 +91,15 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddAuthorization();
 
-// 5. CORS Policy
+// 5. CORS Policy with SignalR support
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy =>
     {
-        policy.AllowAnyOrigin()
+        policy.SetIsOriginAllowed(_ => true)
               .AllowAnyHeader()
-              .AllowAnyMethod();
+              .AllowAnyMethod()
+              .AllowCredentials();
     });
 });
 
@@ -108,6 +115,16 @@ builder.Services.AddScoped<IAITranslationService, AiTranslationService>();
 builder.Services.AddScoped<IAIVoiceService, AiVoiceService>();
 builder.Services.AddScoped<IAIVisionService, AiVisionService>();
 builder.Services.AddScoped<IAdminService, AdminService>();
+
+// Enterprise Architecture Services
+builder.Services.AddScoped<IStorageService, StorageService>();
+builder.Services.AddSingleton<ICacheService, RedisCacheService>();
+builder.Services.AddSingleton<IBackgroundTaskQueue, BackgroundTaskQueue>();
+builder.Services.AddSingleton<ISignalRNotificationService, SignalRNotificationService>();
+
+// Hosted Background Services
+builder.Services.AddHostedService<QueuedHostedService>();
+builder.Services.AddHostedService<ScheduledMaintenanceService>();
 
 var app = builder.Build();
 
@@ -132,10 +149,13 @@ if (app.Environment.IsDevelopment() || true)
     });
 }
 
+app.UseStaticFiles();
 app.UseCors("AllowAll");
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+app.MapHub<SafarHub>("/hubs/safar");
 
 app.Run();
+

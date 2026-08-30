@@ -27,9 +27,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const logout = () => {
+    import('../services/api').then(({ api }) => api.logout());
     setToken(null);
     setUser(null);
     localStorage.removeItem('safar_token');
+    localStorage.removeItem('safar_refresh_token');
     localStorage.removeItem('safar_user');
   };
 

@@ -195,6 +195,7 @@ public class AdminController : ControllerBase
         _adminService = adminService;
     }
 
+    [Authorize(Roles = "Admin")]
     [HttpGet("dashboard")]
     public async Task<ActionResult<AdminDashboardStatsDto>> GetDashboard()
     {
@@ -202,10 +203,66 @@ public class AdminController : ControllerBase
         return Ok(stats);
     }
 
+    [Authorize(Roles = "Admin")]
     [HttpGet("users")]
     public async Task<ActionResult<List<UserProfileDto>>> GetUsers()
     {
         var users = await _adminService.GetAllUsersAsync();
         return Ok(users);
     }
+
+    [Authorize(Roles = "Admin")]
+    [HttpGet("users/paged")]
+    public async Task<ActionResult<PagedResult<UserProfileDto>>> GetUsersPaged(
+        [FromQuery] string? search,
+        [FromQuery] string? role,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 10)
+    {
+        var result = await _adminService.GetUsersPagedAsync(search, role, page, pageSize);
+        return Ok(result);
+    }
+
+    [Authorize(Roles = "Admin")]
+    [HttpDelete("users/{id:guid}")]
+    public async Task<ActionResult<object>> DeleteUser(Guid id)
+    {
+        try
+        {
+            var adminId = GetUserId();
+            if (adminId == null) return Unauthorized();
+
+            var deleted = await _adminService.DeleteUserAsync(id, adminId.Value);
+            if (!deleted) return NotFound(new { message = "User not found." });
+
+            return Ok(new { success = true, message = "User successfully removed by administrator." });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    [Authorize(Roles = "Admin")]
+    [HttpPut("users/{id:guid}/role")]
+    public async Task<ActionResult<object>> UpdateRole(Guid id, [FromBody] UpdateRoleRequestDto request)
+    {
+        var updated = await _adminService.UpdateUserRoleAsync(id, request.Role);
+        if (!updated) return BadRequest(new { message = "Failed to update user role. Invalid user or role name." });
+
+        return Ok(new { success = true, message = "User role updated successfully." });
+    }
+
+    private Guid? GetUserId()
+    {
+        var claim = User.FindFirst(ClaimTypes.NameIdentifier) ?? User.FindFirst("sub");
+        if (claim != null && Guid.TryParse(claim.Value, out var guid))
+        {
+            return guid;
+        }
+        return null;
+    }
 }
+
+public record UpdateRoleRequestDto(string Role);
+

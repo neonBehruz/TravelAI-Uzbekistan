@@ -78,3 +78,16 @@ public record NearbyPlaceDto(
     decimal TicketPriceUzs,
     string EstimatedWalkTime
 );
+
+public record PlaceFilterRequestDto(
+    string? City = null,
+    string? Search = null,
+    PlaceCategoryType? CategoryType = null,
+    decimal? MinPrice = null,
+    decimal? MaxPrice = null,
+    double? MinRating = null,
+    string? SortBy = null,
+    int PageNumber = 1,
+    int PageSize = 10
+);
+

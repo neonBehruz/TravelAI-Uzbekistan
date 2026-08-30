@@ -12,7 +12,13 @@ import {
   CheckCircle2,
   Car,
   ChevronRight,
-  TrendingDown
+  Printer,
+  Download,
+  Copy,
+  Check,
+  Send,
+  X,
+  QrCode
 } from 'lucide-react';
 import { AiTripPlan, AiTripActivity } from '../types';
 import { useAudioGuide } from '../context/AudioGuideContext';
@@ -32,6 +38,8 @@ export const TripResultPage: React.FC<TripResultPageProps> = ({
 }) => {
   const [activeDay, setActiveDay] = useState(1);
   const [isSaved, setIsSaved] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [copied, setCopied] = useState(false);
   const { playAudio } = useAudioGuide();
 
   const currentDayPlan = plan.days.find((d) => d.dayNumber === activeDay) || plan.days[0];
@@ -40,6 +48,19 @@ export const TripResultPage: React.FC<TripResultPageProps> = ({
     setIsSaved(true);
     onSaveTrip();
   };
+
+  const handlePrintPdf = () => {
+    window.print();
+  };
+
+  const handleCopyLink = () => {
+    navigator.clipboard.writeText(window.location.href);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2500);
+  };
+
+  const shareText = encodeURIComponent(`🇺🇿 SAFAR AI - O'zbekiston Sayohat Rejam: ${plan.title} (${plan.numberOfDays} kun / ${plan.destinationName})`);
+  const shareUrl = encodeURIComponent(window.location.href);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '32px', maxWidth: '1100px', margin: '0 auto' }}>
@@ -61,19 +82,29 @@ export const TripResultPage: React.FC<TripResultPageProps> = ({
             </p>
           </div>
 
-          <div style={{ display: 'flex', gap: '12px' }}>
-            <button onClick={handleSave} className="btn-secondary" style={{ padding: '12px 20px' }}>
+          <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+            <button onClick={handleSave} className="btn-secondary" style={{ padding: '10px 18px' }}>
               <Bookmark size={16} color={isSaved ? 'var(--accent-gold)' : 'currentColor'} />
-              <span>{isSaved ? 'Trip Saved!' : 'Save Trip'}</span>
+              <span>{isSaved ? 'Saved!' : 'Save'}</span>
+            </button>
+
+            <button onClick={() => setShowShareModal(true)} className="btn-secondary" style={{ padding: '10px 18px' }} title="Ulashish">
+              <Share2 size={16} />
+              <span>Share</span>
+            </button>
+
+            <button onClick={handlePrintPdf} className="btn-secondary" style={{ padding: '10px 18px' }} title="PDF Vaucher Yuklab Olish / Chop etish">
+              <Download size={16} />
+              <span>PDF Voucher</span>
             </button>
 
             <button
               onClick={() => onOpenMapWithRoute(currentDayPlan.activities)}
               className="btn-primary"
-              style={{ padding: '12px 24px' }}
+              style={{ padding: '10px 22px' }}
             >
               <MapPin size={16} />
-              <span>Open on Smart Map</span>
+              <span>Smart Map</span>
             </button>
           </div>
         </div>
@@ -265,6 +296,79 @@ export const TripResultPage: React.FC<TripResultPageProps> = ({
           </div>
         ))}
       </div>
+
+      {/* Share Modal */}
+      {showShareModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100vw',
+          height: '100vh',
+          background: 'rgba(0, 0, 0, 0.75)',
+          backdropFilter: 'blur(10px)',
+          zIndex: 1000,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '20px'
+        }}>
+          <div className="glass-panel" style={{
+            maxWidth: '480px',
+            width: '100%',
+            padding: '28px',
+            borderRadius: 'var(--radius-xl)',
+            background: 'linear-gradient(135deg, rgba(13, 22, 48, 0.95), rgba(7, 13, 30, 0.98))',
+            border: '1px solid var(--border-gold)',
+            boxShadow: '0 25px 60px rgba(0,0,0,0.8)'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Share2 size={20} color="var(--accent-gold)" />
+                <h3 style={{ fontSize: '20px', color: '#fff', fontWeight: 800 }}>Sayohat Rejasini Ulashish</h3>
+              </div>
+              <button onClick={() => setShowShareModal(false)} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}>
+                <X size={20} />
+              </button>
+            </div>
+
+            <p style={{ color: 'var(--text-secondary)', fontSize: '13px', marginBottom: '20px', lineHeight: 1.5 }}>
+              AI tomonidan tuzilgan ushbu sayohat rejasini do'stlaringizga yuboring yoki havolani nusxalang:
+            </p>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '20px' }}>
+              <a
+                href={`https://t.me/share/url?url=${shareUrl}&text=${shareText}`}
+                target="_blank"
+                rel="noreferrer"
+                className="btn-secondary"
+                style={{ justifyContent: 'center', padding: '12px', background: 'rgba(36, 161, 222, 0.15)', borderColor: 'rgba(36, 161, 222, 0.4)', color: '#24A1DE' }}
+              >
+                <Send size={16} /> Telegram Orqali Yuborish
+              </a>
+
+              <a
+                href={`https://api.whatsapp.com/send?text=${shareText}%20${shareUrl}`}
+                target="_blank"
+                rel="noreferrer"
+                className="btn-secondary"
+                style={{ justifyContent: 'center', padding: '12px', background: 'rgba(37, 211, 102, 0.15)', borderColor: 'rgba(37, 211, 102, 0.4)', color: '#25D366' }}
+              >
+                <Send size={16} /> WhatsApp Orqali Yuborish
+              </a>
+
+              <button
+                onClick={handleCopyLink}
+                className="btn-primary"
+                style={{ justifyContent: 'center', padding: '12px' }}
+              >
+                {copied ? <Check size={16} /> : <Copy size={16} />}
+                <span>{copied ? 'Havola Nusxalandi!' : 'Havolani Nusxalash'}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

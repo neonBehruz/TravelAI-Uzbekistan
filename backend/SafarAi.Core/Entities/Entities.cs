@@ -33,6 +33,9 @@ public class User
     public TravelStyle PreferredStyle { get; set; } = TravelStyle.Balanced;
     public TransportMode PreferredTransport { get; set; } = TransportMode.Walking;
 
+    [MaxLength(255)]
+    public string? AvatarUrl { get; set; }
+
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? LastLoginAt { get; set; }
 
@@ -41,6 +44,27 @@ public class User
     public ICollection<SavedPlace> SavedPlaces { get; set; } = new List<SavedPlace>();
     public ICollection<AIConversation> AIConversations { get; set; } = new List<AIConversation>();
     public ICollection<UserLocation> LocationHistory { get; set; } = new List<UserLocation>();
+    public ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
+}
+
+public class RefreshToken
+{
+    [Key]
+    public Guid Id { get; set; } = Guid.NewGuid();
+
+    [Required]
+    public string Token { get; set; } = string.Empty;
+
+    public Guid UserId { get; set; }
+    [ForeignKey("UserId")]
+    public User? User { get; set; }
+
+    public DateTime ExpiresAt { get; set; }
+    public bool IsRevoked { get; set; }
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public string? ReplacedByToken { get; set; }
+
+    public bool IsActive => !IsRevoked && DateTime.UtcNow < ExpiresAt;
 }
 
 public class Destination

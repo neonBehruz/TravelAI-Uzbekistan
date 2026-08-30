@@ -202,7 +202,7 @@ export const TranslatorPage: React.FC = () => {
           >
             {SUPPORTED_LANGUAGES.map((l) => (
               <option key={l.code} value={l.code} style={{ background: '#0D1630' }}>
-                {l.flag} {l.name}
+                {l.name}
               </option>
             ))}
           </select>
@@ -242,7 +242,7 @@ export const TranslatorPage: React.FC = () => {
           >
             {SUPPORTED_LANGUAGES.map((l) => (
               <option key={l.code} value={l.code} style={{ background: '#0D1630' }}>
-                {l.flag} {l.name}
+                {l.name}
               </option>
             ))}
           </select>

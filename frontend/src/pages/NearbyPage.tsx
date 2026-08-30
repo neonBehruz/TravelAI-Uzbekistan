@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { useLocation } from '../context/LocationContext';
 import { useAudioGuide } from '../context/AudioGuideContext';
+import { useLanguage } from '../context/LanguageContext';
 import { NearbyPlace, Place } from '../types';
 import { api } from '../services/api';
 
@@ -23,6 +24,7 @@ interface NearbyPageProps {
 export const NearbyPage: React.FC<NearbyPageProps> = ({ onNavigatePlace, onOpenMap }) => {
   const { location } = useLocation();
   const { playAudio } = useAudioGuide();
+  const { t } = useLanguage();
 
   const [nearbyList, setNearbyList] = useState<NearbyPlace[]>([]);
   const [places, setPlaces] = useState<Place[]>([]);
@@ -65,16 +67,16 @@ export const NearbyPage: React.FC<NearbyPageProps> = ({ onNavigatePlace, onOpenM
       }}>
         <div>
           <div className="badge-turquoise" style={{ marginBottom: '8px' }}>
-            <Radio size={12} /> Live GPS Geofence Radar
+            <Radio size={12} /> {t('nearbyRadar')}
           </div>
-          <h1 style={{ fontSize: '28px', color: '#fff' }}>Nearby Attractions & Hidden Gems</h1>
+          <h1 style={{ fontSize: '28px', color: '#fff' }}>{t('nearbyPlaces')} ({location.city})</h1>
           <p style={{ color: 'var(--text-secondary)', fontSize: '14px', marginTop: '4px' }}>
-            Showing places calculated from your current coordinates in {location.city} ({location.latitude.toFixed(4)}, {location.longitude.toFixed(4)})
+            {t('realGpsActive')} • {location.city} ({location.latitude.toFixed(4)}, {location.longitude.toFixed(4)})
           </p>
         </div>
 
         <button onClick={onOpenMap} className="btn-primary">
-          <MapPin size={16} /> View on Map
+          <MapPin size={16} /> {t('openMap')}
         </button>
       </div>
 

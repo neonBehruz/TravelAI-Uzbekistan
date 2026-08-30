@@ -24,7 +24,7 @@ interface SmartMapPageProps {
 }
 
 export const SmartMapPage: React.FC<SmartMapPageProps> = ({ onNavigatePlace, initialRoutePlaces }) => {
-  const { location } = useLocation();
+  const { location, recenterOnRealGps } = useLocation();
   const { playAudio } = useAudioGuide();
 
   const [places, setPlaces] = useState<Place[]>([]);
@@ -151,6 +151,41 @@ export const SmartMapPage: React.FC<SmartMapPageProps> = ({ onNavigatePlace, ini
             userLocation={{ latitude: location.latitude, longitude: location.longitude }}
             routeCoordinates={routeInfo ? routeInfo.waypoints.map(w => [w.latitude, w.longitude]) : undefined}
           />
+
+          {/* Floating Live GPS Tracking Control on Map */}
+          <div style={{
+            position: 'absolute',
+            top: '16px',
+            right: '16px',
+            zIndex: 1000,
+            display: 'flex',
+            gap: '8px'
+          }}>
+            <button
+              onClick={() => {
+                recenterOnRealGps();
+                setSelectedPlace(null);
+              }}
+              className="btn-secondary"
+              style={{
+                background: 'rgba(7, 13, 30, 0.9)',
+                backdropFilter: 'blur(8px)',
+                border: location.isGpsActive ? '1px solid var(--accent-turquoise)' : '1px solid var(--border-subtle)',
+                color: location.isGpsActive ? 'var(--accent-turquoise)' : '#fff',
+                fontSize: '12px',
+                padding: '8px 14px',
+                borderRadius: 'var(--radius-full)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                boxShadow: '0 4px 20px rgba(0,0,0,0.5)'
+              }}
+              title="Real GPS orqali xaritani markazlashtirish"
+            >
+              <Navigation size={14} color={location.isGpsActive ? 'var(--accent-turquoise)' : '#fff'} />
+              <span>{location.isGpsActive ? `Real GPS (±${location.accuracy}m)` : 'Real GPS ga O‘tish'}</span>
+            </button>
+          </div>
         </div>
 
         {/* Right Info & Route Details Panel */}

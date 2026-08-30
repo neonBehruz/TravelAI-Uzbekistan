@@ -45,6 +45,28 @@ public class AuthController : ControllerBase
         }
     }
 
+    [HttpPost("refresh-token")]
+    public async Task<ActionResult<AuthResponseDto>> RefreshToken([FromBody] RefreshTokenRequestDto request)
+    {
+        try
+        {
+            var result = await _authService.RefreshTokenAsync(request.RefreshToken);
+            return Ok(result);
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return Unauthorized(new { message = ex.Message });
+        }
+    }
+
+    [HttpPost("logout")]
+    public async Task<ActionResult<object>> Logout([FromBody] LogoutRequestDto? request)
+    {
+        var userId = GetUserId();
+        var result = await _authService.LogoutAsync(request?.RefreshToken, userId);
+        return Ok(new { success = true, message = "Logged out and tokens revoked successfully." });
+    }
+
     [Authorize]
     [HttpGet("me")]
     public async Task<ActionResult<UserProfileDto>> GetProfile()
@@ -96,6 +118,13 @@ public class DestinationsController : ControllerBase
         return Ok(result);
     }
 
+    [HttpGet("paged")]
+    public async Task<ActionResult<PagedResult<DestinationDto>>> GetPaged([FromQuery] PaginationQuery query)
+    {
+        var result = await _placeService.GetDestinationsPagedAsync(query);
+        return Ok(result);
+    }
+
     [HttpGet("{id:guid}")]
     public async Task<ActionResult<DestinationDto>> GetById(Guid id)
     {
@@ -120,6 +149,13 @@ public class PlacesController : ControllerBase
     public async Task<ActionResult<List<PlaceDto>>> GetPlaces([FromQuery] string? city, [FromQuery] string? category, [FromQuery] string? search)
     {
         var result = await _placeService.GetPlacesAsync(city, category, search);
+        return Ok(result);
+    }
+
+    [HttpGet("paged")]
+    public async Task<ActionResult<PagedResult<PlaceDto>>> GetPlacesPaged([FromQuery] PlaceFilterRequestDto filter)
+    {
+        var result = await _placeService.GetPlacesPagedAsync(filter);
         return Ok(result);
     }
 

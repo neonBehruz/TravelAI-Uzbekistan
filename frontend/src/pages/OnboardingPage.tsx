@@ -104,7 +104,7 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({ onComplete }) =>
               </label>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: '10px', maxHeight: '260px', overflowY: 'auto', paddingRight: '4px' }}>
                 {[
-                  { name: 'Samarkand', tag: 'MVP Live', img: 'https://images.unsplash.com/photo-1596484552834-6a58f850e0a1?auto=format&fit=crop&w=400&q=80', lat: 39.6547, lng: 66.9758 },
+                  { name: 'Samarkand', tag: 'MVP Live', img: 'https://images.unsplash.com/photo-1628151015968-3a4429e9ef04?auto=format&fit=crop&w=400&q=80', lat: 39.6547, lng: 66.9758 },
                   { name: 'Bukhara', tag: 'UNESCO City', img: 'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?auto=format&fit=crop&w=400&q=80', lat: 39.7747, lng: 64.4286 },
                   { name: 'Khiva', tag: 'Ichan Kala', img: 'https://images.unsplash.com/photo-1589182373726-e4f658ab50f0?auto=format&fit=crop&w=400&q=80', lat: 41.3783, lng: 60.3639 },
                   { name: 'Tashkent', tag: 'Capital Hub', img: 'https://images.unsplash.com/photo-1569154941061-e231b4725ef1?auto=format&fit=crop&w=400&q=80', lat: 41.2995, lng: 69.2401 },
@@ -167,7 +167,6 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({ onComplete }) =>
                       gap: '6px'
                     }}
                   >
-                    <span>{l.flag}</span>
                     <span>{l.nativeName}</span>
                   </button>
                 ))}
