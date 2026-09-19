@@ -10,7 +10,7 @@ import {
   UserProfile
 } from '../types';
 
-const API_BASE_URL = 'http://localhost:5000/api';
+const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL as string) || 'http://localhost:5050/api';
 
 const getHeaders = () => {
   const token = localStorage.getItem('safar_token');
@@ -95,6 +95,32 @@ export const api = {
     if (data.token) localStorage.setItem('safar_token', data.token);
     if (data.refreshToken) localStorage.setItem('safar_refresh_token', data.refreshToken);
     return data;
+  },
+
+  async forgotPassword(identifier: string) {
+    const res = await fetch(`${API_BASE_URL}/auth/forgot-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ identifier })
+    });
+    if (!res.ok) {
+      const errorData = await res.json().catch(() => ({}));
+      throw new Error(errorData.message || 'Parolni tiklashda xatolik yuz berdi.');
+    }
+    return await res.json();
+  },
+
+  async resetPassword(identifier: string, resetCode: string, newPassword: string) {
+    const res = await fetch(`${API_BASE_URL}/auth/reset-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ identifier, resetCode, newPassword })
+    });
+    if (!res.ok) {
+      const errorData = await res.json().catch(() => ({}));
+      throw new Error(errorData.message || 'Parolni yangilashda xatolik yuz berdi.');
+    }
+    return await res.json();
   },
 
   async logout() {
@@ -851,6 +877,16 @@ export const api = {
       if (res.ok) return await res.json();
     } catch (e) {
       console.warn('API live trains error:', e);
+    }
+    return null;
+  },
+
+  async getElektropoyezdRoutes() {
+    try {
+      const res = await fetch(`${API_BASE_URL}/transport/elektropoyezd/routes`);
+      if (res.ok) return await res.json();
+    } catch (e) {
+      console.warn('API elektropoyezd routes error:', e);
     }
     return null;
   },

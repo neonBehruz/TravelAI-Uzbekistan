@@ -5,14 +5,8 @@ import {
   Bot,
   Hotel,
   Globe,
-  Radio,
-  Volume2,
   ArrowRight,
-  Star,
   Clock,
-  Compass,
-  Navigation,
-  Bookmark,
   TrendingUp,
   TrendingDown,
   Utensils,
@@ -23,23 +17,15 @@ import {
   Crown,
   Wallet,
   CloudSun,
-  Smartphone,
   Eye,
-  Award,
   Newspaper,
   ChevronLeft,
   ChevronRight,
-  Flame,
-  Calendar,
-  Layers,
-  ArrowUpRight,
-  CheckCircle,
-  Share2,
   X,
-  ExternalLink,
-  Tag,
   Zap,
-  Activity
+  Activity,
+  Languages,
+  Camera
 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { useLocation, CITIES, CITY_WEATHER_DATA } from '../context/LocationContext';
@@ -48,117 +34,18 @@ import { useAudioGuide } from '../context/AudioGuideContext';
 import { Place, NearbyPlace } from '../types';
 import { api } from '../services/api';
 import { UzbekFlag } from '../components/UzbekFlag';
+import {
+  NewsItem,
+  LIVE_TICKER_ITEMS_MAP,
+  NEWS_DATA_MAP,
+  WEATHER_TRANSLATIONS,
+  DASHBOARD_STRINGS,
+  getDashboardLangKey
+} from '../i18n/dashboardTranslations';
 
 interface DashboardPageProps {
   onNavigate: (tab: string, params?: any) => void;
 }
-
-interface NewsItem {
-  id: string;
-  category: 'monuments' | 'festivals' | 'transport' | 'food' | 'tips' | 'hot';
-  categoryLabel: string;
-  badgeColor: string;
-  title: string;
-  excerpt: string;
-  fullContent: string;
-  imageUrl: string;
-  publishedTime: string;
-  viewsCount: number;
-  featured?: boolean;
-  actionTab?: string;
-}
-
-const NEWS_DATA: NewsItem[] = [
-  {
-    id: 'n1',
-    category: 'hot',
-    categoryLabel: '🔥 Tezkor Yangilik',
-    badgeColor: '#EF4444',
-    title: 'Registon maydonida 3D Lazer va Yorug‘lik Musiqa Shousi boshlandi!',
-    excerpt: 'Har oqshom soat 20:30 da Samarqand Registon maydonida Amir Temur davri tarixini aks ettiruvchi multimedia spektakli namoyish qilinmoqda.',
-    fullContent: 'Samarqandning mashhur Registon maydonidagi Sherdor, Tillakori va Ulug‘bek madrasalari fasadlarida har oqshom soat 20:30 dan boshlab zamonaviy 3D proyeksiyali multimedia lazer shousi o‘tkazilmoqda. Shou davomida Buyuk Ipak Yo‘li karvonlari, Temuriylar renessansi va qadimiy Sharq yulduzlari musiqiy ohanglar ostida jonlanadi. Sayyohlar uchun kirish chiptalari madrasa kassalarida va onlayn mavjud.',
-    imageUrl: 'https://images.unsplash.com/photo-1596484552834-6a58f850e0a1?auto=format&fit=crop&w=900&q=80',
-    publishedTime: '15 daqiqa oldin',
-    viewsCount: 2430,
-    featured: true,
-    actionTab: 'map'
-  },
-  {
-    id: 'n2',
-    category: 'festivals',
-    categoryLabel: '🎭 Festival & Madaniyat',
-    badgeColor: '#A855F7',
-    title: 'Ichan Qal‘ada "Sharq Taomlari & Hunarmandlar" Xalqaro Forumi',
-    excerpt: 'Xiva shahrida dunyoning 40 dan ortiq mamlakatidan kelgan hunarmand va oshpazlar ishtirokida katta gastronomiya haftaligi ochildi.',
-    fullContent: 'Xorazmning qadimiy Ichan Qal‘a muzey-qo‘riqxonasida xalqaro hunarmandchilik va ipak mahsulotlari yarmarkasi o‘tkazilmoqda. Mehmonlar mashhur Xorazm tuxumbaragi, shivit oshi va tandir non tayyorlash bo‘yicha bepul master-klasslarda qatnashishlari mumkin.',
-    imageUrl: 'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?auto=format&fit=crop&w=900&q=80',
-    publishedTime: '45 daqiqa oldin',
-    viewsCount: 1870,
-    featured: true,
-    actionTab: 'artisan-crafts'
-  },
-  {
-    id: 'n3',
-    category: 'transport',
-    categoryLabel: '🚆 Transport & Poyezdlar',
-    badgeColor: '#05B2D2',
-    title: 'Afrosiyob poyezdlariga qo‘shimcha reyslar va vagonlar qo‘shildi',
-    excerpt: 'Toshkent – Samarqand – Buxoro yo‘nalishida sayyohlar oqimi ortishi sababli kunlik reyslar soni 6 taga yetkazildi.',
-    fullContent: 'O‘zbekiston Temir Yo‘llari sayyohlik mavsumi qizg‘in pallasida qatnovlarni yengillashtirish maqsadida yangi tezyurar tarkiblarni liniyaga chiqardi. Endi chiptalarni elektron platforma orqali 45 kun oldindan xarid qilish va Safar AI orqali harakat jadvalini tekshirish mumkin.',
-    imageUrl: 'https://images.unsplash.com/photo-1474487548417-781cb71495f3?auto=format&fit=crop&w=900&q=80',
-    publishedTime: '2 soat oldin',
-    viewsCount: 3120,
-    actionTab: 'transport'
-  },
-  {
-    id: 'n4',
-    category: 'food',
-    categoryLabel: '🍽️ Gastronomiya',
-    badgeColor: '#F59E0B',
-    title: 'Samarqand Oshi Markazida 1 tonnalik Ziyofat Oshi damlandi!',
-    excerpt: 'Beshburchak sariq sabzi, Samarqand maxsus guruchi va mayiz bilan tayyorlangan afsonaviy to‘y oshi barcha mehmonlarga ulashildi.',
-    fullContent: 'Samarqanddagi Markaziy Osh Markazida an‘anaviy to‘y palovi tayyorlanishi jarayoni ochiq osmon ostida namoyish etildi. Mahoratli oshpazlar qat-qat damlangan go‘sht, no‘xat va zira sirlarini xorijiy sayyohlarga so‘zlab berdilar.',
-    imageUrl: 'https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?auto=format&fit=crop&w=900&q=80',
-    publishedTime: '3 soat oldin',
-    viewsCount: 4210,
-    actionTab: 'gastronomy'
-  },
-  {
-    id: 'n5',
-    category: 'monuments',
-    categoryLabel: '🏛️ Tarixiy Obidalar',
-    badgeColor: '#10B981',
-    title: 'Shohi Zinda majmuasida yangi tungi yoritish tizimi ishga tushdi',
-    excerpt: 'Moviy gumbazlar va mozaika naqshlari endi kechasi ham o‘zgacha jilo kasb etmoqda.',
-    fullContent: 'Shohi Zinda ansamblining barcha xonaqoh va maqbaralarida Italiya texnologiyasi asosida yumshoq issiq yoritgichlar o‘rnatildi. Ushbu yangilik orqali kechki fotosessiyalar va audio sayohatlar yanada jozibali bo‘ldi.',
-    imageUrl: 'https://images.unsplash.com/photo-1588668214407-6ea9a6d8c272?auto=format&fit=crop&w=900&q=80',
-    publishedTime: '5 soat oldin',
-    viewsCount: 1540,
-    actionTab: 'virtual-tour'
-  },
-  {
-    id: 'n6',
-    category: 'tips',
-    categoryLabel: '💡 Sayyoh Maslahati',
-    badgeColor: '#3B82F6',
-    title: 'Siyob va Chorsu bozorlarida savdolashish (Bargaining) qoidalari',
-    excerpt: 'Sharq bozorlarida xushmuomalalik bilan narxni 15-20% gacha tushirish mumkin.',
-    fullContent: 'O‘zbekiston bozorlarida savdolashish faqatgina chegirma olish emas, balki samimiy muloqot madaniyatidir. Sotuvchiga tabassum bilan "Assalomu alaykum, yaxshimisiz" deb boshlash va Safar AI Bozor Kalkulyatoridan foydalanish eng yaxshi narxga erishishga yordam beradi.',
-    imageUrl: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=900&q=80',
-    publishedTime: 'Bugun 09:15',
-    viewsCount: 2980,
-    actionTab: 'bazaar-calculator'
-  }
-];
-
-const LIVE_TICKER_ITEMS = [
-  "🔴 JONLI: Samarqand Registon maydonida yangilangan 3D Lazer shousi soat 20:30 da boshlanadi.",
-  "🚆 Afrosiyob tezyurar poyezdlariga Toshkent - Samarqand - Buxoro reyslari uchun qo'shimcha vagonlar ulandi.",
-  "✨ Bugun O'zbekistonga 28,450 nafar xalqaro sayyoh tashrif buyurdi va Safar AI xizmatlaridan foydalanmoqda.",
-  "🍲 Samarqand Markaziy Osh Markazida bugun maxsus Ziyofat Oshi damlandi — soat 11:30 dan 15:00 gacha!",
-  "🎭 Ichan Qal'ada Xalqaro Ipak Yo'li Hunarmandlar Festivali 2026 qizg'in davom etmoqda.",
-  "💵 Jonli Valyuta: 1 USD = 12,700 UZS • 1 EUR = 13,800 UZS • 1 RUB = 138 UZS."
-];
 
 const CURRENCY_RATES = [
   { code: 'USD', name: 'AQSH Dollari', buy: '12,680', sell: '12,740', change: '+15 UZS', percent: '+0.12%', trend: 'up' },
@@ -169,11 +56,16 @@ const CURRENCY_RATES = [
 ];
 
 export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
-  const { t } = useLanguage();
+  const { t, currentLanguage } = useLanguage();
   const { location } = useLocation();
   const { user } = useAuth();
   const { playAudio } = useAudioGuide();
   const isAdmin = user?.role === 'Admin';
+
+  const langKey = getDashboardLangKey(currentLanguage);
+  const dStr = DASHBOARD_STRINGS[langKey] || DASHBOARD_STRINGS.en;
+  const tickerList = LIVE_TICKER_ITEMS_MAP[langKey] || LIVE_TICKER_ITEMS_MAP.en;
+  const currentNewsData = NEWS_DATA_MAP[langKey] || NEWS_DATA_MAP.en;
 
   const [places, setPlaces] = useState<Place[]>([]);
   const [nearby, setNearby] = useState<NearbyPlace[]>([]);
@@ -193,10 +85,10 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
   // Auto-rotate ticker headlines every 4.5 seconds
   useEffect(() => {
     const timer = setInterval(() => {
-      setTickerIndex((prev) => (prev + 1) % LIVE_TICKER_ITEMS.length);
+      setTickerIndex((prev) => (prev + 1) % tickerList.length);
     }, 4500);
     return () => clearInterval(timer);
-  }, []);
+  }, [tickerList.length]);
 
   // Auto-rotate city weather/spotlight every 6 seconds
   useEffect(() => {
@@ -224,14 +116,14 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
     };
 
     loadData();
-  }, [location.latitude, location.longitude]);
+  }, [location.latitude, location.longitude, location.city]);
 
   const currentCityName = cityList[cityTickerIndex] || 'Samarkand';
   const currentCityInfo = CITIES[currentCityName] || CITIES.Samarkand;
 
-  const filteredNews = selectedCategory === 'all'
-    ? NEWS_DATA
-    : NEWS_DATA.filter((n) => n.category === selectedCategory);
+  const filteredNews: NewsItem[] = selectedCategory === 'all'
+    ? currentNewsData
+    : currentNewsData.filter((n) => n.category === selectedCategory);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '28px', maxWidth: '1200px', margin: '0 auto', paddingBottom: '40px' }}>
@@ -263,7 +155,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
             flexShrink: 0
           }}>
             <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#fff', animation: 'pulse 1.5s infinite' }} />
-            JONLI YANGILIK
+            {dStr.liveNewsBadge}
           </span>
 
           <div style={{
@@ -275,22 +167,22 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
             textOverflow: 'ellipsis',
             transition: 'all 0.4s ease'
           }}>
-            {LIVE_TICKER_ITEMS[tickerIndex]}
+            {tickerList[tickerIndex % tickerList.length]}
           </div>
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
           <button
-            onClick={() => setTickerIndex((prev) => (prev - 1 + LIVE_TICKER_ITEMS.length) % LIVE_TICKER_ITEMS.length)}
+            onClick={() => setTickerIndex((prev) => (prev - 1 + tickerList.length) % tickerList.length)}
             style={{ background: 'rgba(255,255,255,0.06)', border: 'none', color: '#fff', padding: '4px', borderRadius: '50%', cursor: 'pointer' }}
-            title="Oldingi yangilik"
+            title={dStr.prevNews}
           >
             <ChevronLeft size={14} />
           </button>
           <button
-            onClick={() => setTickerIndex((prev) => (prev + 1) % LIVE_TICKER_ITEMS.length)}
+            onClick={() => setTickerIndex((prev) => (prev + 1) % tickerList.length)}
             style={{ background: 'rgba(255,255,255,0.06)', border: 'none', color: '#fff', padding: '4px', borderRadius: '50%', cursor: 'pointer' }}
-            title="Keyingi yangilik"
+            title={dStr.nextNews}
           >
             <ChevronRight size={14} />
           </button>
@@ -317,14 +209,14 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                 <span className="badge-admin-crown">
-                  <ShieldCheck size={12} /> Administrator Active
+                  <ShieldCheck size={12} /> {dStr.adminActive}
                 </span>
                 <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
-                  Full System & Database Authority
+                  {dStr.adminDesc}
                 </span>
               </div>
               <div style={{ color: '#fff', fontWeight: 700, fontSize: '15px', marginTop: '2px' }}>
-                Safar AI Tizim Boshqaruv Markazi
+                {dStr.adminCenter}
               </div>
             </div>
           </div>
@@ -336,7 +228,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
               style={{ padding: '10px 18px', fontSize: '13px' }}
             >
               <ShieldCheck size={16} />
-              <span>Admin Paneliga O'tish</span>
+              <span>{dStr.toAdminPanel}</span>
               <ArrowRight size={14} />
             </button>
           </div>
@@ -357,7 +249,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
       }}>
         <div style={{ maxWidth: '640px' }}>
           <div className="badge-turquoise" style={{ marginBottom: '10px', display: 'inline-flex', gap: '6px' }}>
-            <Sparkles size={12} /> {t('appName')} • Jonli Smart Sayyohlik Platformasi
+            <Sparkles size={12} /> {t('appName')} • {dStr.smartPlatformBadge}
           </div>
           <h1 style={{ fontSize: '28px', color: '#fff', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', fontWeight: 800 }}>
             {t('greeting')}, {user ? user.name.split(' ')[0] : 'Traveler'}! <UzbekFlag size={26} />
@@ -395,15 +287,15 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
               <span style={{ fontSize: '11px', fontWeight: 800, color: 'var(--accent-turquoise)', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                <Activity size={13} /> Hududiy Jonli Radar
+                <Activity size={13} /> {dStr.regionalRadarTitle}
               </span>
-              <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Har 6s almashadi</span>
+              <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{dStr.rotatesEvery6s}</span>
             </div>
             <div style={{ fontSize: '18px', fontWeight: 800, color: '#fff', display: 'flex', alignItems: 'center', gap: '6px' }}>
               <MapPin size={18} color="var(--accent-gold)" /> {currentCityName}
             </div>
             <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '4px' }}>
-              {currentCityInfo.region} • {(CITY_WEATHER_DATA[currentCityName] || { tempC: 30, condition: 'Musaffo quyoshli' }).tempC}°C {(CITY_WEATHER_DATA[currentCityName] || { condition: 'Quyoshli' }).condition}
+              {currentCityInfo.region} • {(CITY_WEATHER_DATA[currentCityName] || { tempC: 30, condition: 'Musaffo quyoshli' }).tempC}°C {WEATHER_TRANSLATIONS[langKey]?.[(CITY_WEATHER_DATA[currentCityName] || { condition: 'Musaffo quyoshli' }).condition] || (CITY_WEATHER_DATA[currentCityName] || { condition: 'Quyoshli' }).condition}
             </div>
           </div>
 
@@ -413,12 +305,12 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
               onClick={() => onNavigate('destinations')}
               style={{ background: 'transparent', border: 'none', color: 'var(--accent-turquoise)', fontSize: '12px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
             >
-              Ko'rish <ArrowRight size={12} />
+              {dStr.viewBtn} <ArrowRight size={12} />
             </button>
           </div>
         </div>
 
-        {/* Widget 2: Live Currency Rates (Oshish va Pasayish) */}
+        {/* Widget 2: Live Currency Rates */}
         <div className="glass-panel" style={{
           padding: '18px 20px',
           borderRadius: 'var(--radius-lg)',
@@ -431,10 +323,10 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
               <span style={{ fontSize: '11px', fontWeight: 800, color: '#FFD700', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                <Coins size={13} /> Jonli Valyuta Kurslari
+                <Coins size={13} /> {dStr.liveCurrencyTitle}
               </span>
               <span style={{ fontSize: '10px', color: '#10B981', fontWeight: 700, background: 'rgba(16, 185, 129, 0.1)', padding: '2px 6px', borderRadius: '4px', border: '1px solid rgba(16, 185, 129, 0.25)' }}>
-                MB Dinamikasi
+                {dStr.cbDynamics}
               </span>
             </div>
 
@@ -486,13 +378,13 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '12px', paddingTop: '8px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
             <span style={{ fontSize: '10.5px', color: '#10B981', display: 'flex', alignItems: 'center', gap: '4px' }}>
               <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#10B981' }} />
-              Oshish / Pasayish jonli
+              {dStr.ratesUpDown}
             </span>
             <button
               onClick={() => onNavigate('bazaar-calculator')}
               style={{ background: 'transparent', border: 'none', color: 'var(--accent-gold)', fontSize: '12px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
             >
-              Kalkulyator <ArrowRight size={12} />
+              {dStr.calculator} <ArrowRight size={12} />
             </button>
           </div>
         </div>
@@ -510,22 +402,22 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
               <span style={{ fontSize: '11px', fontWeight: 800, color: '#c084fc', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                <Zap size={13} /> Kunlik AI Tavsiyasi
+                <Zap size={13} /> {dStr.dailyTipTitle}
               </span>
               <span className="badge-turquoise" style={{ fontSize: '10px', padding: '2px 8px' }}>Smart AI</span>
             </div>
             <div style={{ fontSize: '14px', fontWeight: 700, color: '#fff', lineHeight: 1.4 }}>
-              Samarqandda tushlik vaqtida (12:00 - 13:30) mashhur Osh markazlariga erta borish tavsiya etiladi.
+              {dStr.dailyTipText}
             </div>
           </div>
 
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '12px' }}>
-            <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>AI Maslahatchi</span>
+            <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{dStr.aiAdvisor}</span>
             <button
               onClick={() => onNavigate('ai-guide')}
               style={{ background: 'transparent', border: 'none', color: '#c084fc', fontSize: '12px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
             >
-              AI Gidga Savol Berish <ArrowRight size={12} />
+              {dStr.askAiGuide} <ArrowRight size={12} />
             </button>
           </div>
         </div>
@@ -536,22 +428,22 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '14px', marginBottom: '16px' }}>
           <div>
             <h2 style={{ fontSize: '22px', color: '#fff', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Newspaper size={22} color="var(--accent-turquoise)" /> Sayyohlik Yangiliklari & Jonli Xabarlar
+              <Newspaper size={22} color="var(--accent-turquoise)" /> {dStr.newsSectionTitle}
             </h2>
             <p style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
-              O'zbekiston bo'ylab eng so'nggi madaniy tadbirlar, transport reyslari va muhim e'lonlar
+              {dStr.newsSectionSubtitle}
             </p>
           </div>
 
           {/* Category Filter Pills */}
           <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
             {[
-              { id: 'all', label: '🌟 Barchasi' },
-              { id: 'hot', label: '🔥 Tezkor' },
-              { id: 'monuments', label: '🏛️ Obidalar' },
-              { id: 'festivals', label: '🎭 Festivallar' },
-              { id: 'transport', label: '🚆 Transport' },
-              { id: 'food', label: '🍽️ Taomlar' }
+              { id: 'all', label: dStr.catAll },
+              { id: 'hot', label: dStr.catHot },
+              { id: 'monuments', label: dStr.catMonuments },
+              { id: 'festivals', label: dStr.catFestivals },
+              { id: 'transport', label: dStr.catTransport },
+              { id: 'food', label: dStr.catFood }
             ].map((cat) => (
               <button
                 key={cat.id}
@@ -667,7 +559,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
                 background: 'rgba(255,255,255,0.01)'
               }}>
                 <span style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  <Eye size={12} /> {news.viewsCount.toLocaleString()} ko'rildi
+                  <Eye size={12} /> {news.viewsCount.toLocaleString()} {dStr.viewsText}
                 </span>
 
                 <span style={{
@@ -678,7 +570,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
                   alignItems: 'center',
                   gap: '4px'
                 }}>
-                  Batafsil <ArrowRight size={13} />
+                  {dStr.detailsText} <ArrowRight size={13} />
                 </span>
               </div>
             </div>
@@ -760,7 +652,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '12px', color: 'var(--text-muted)', marginBottom: '10px' }}>
                 <span><Clock size={12} style={{ display: 'inline', marginRight: '4px' }} /> {selectedNews.publishedTime}</span>
                 <span>•</span>
-                <span><Eye size={12} style={{ display: 'inline', marginRight: '4px' }} /> {selectedNews.viewsCount.toLocaleString()} ko'rildi</span>
+                <span><Eye size={12} style={{ display: 'inline', marginRight: '4px' }} /> {selectedNews.viewsCount.toLocaleString()} {dStr.viewsText}</span>
               </div>
 
               <h2 style={{ fontSize: '22px', fontWeight: 800, color: '#fff', marginBottom: '14px', lineHeight: 1.3 }}>
@@ -782,7 +674,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
                     className="btn-primary"
                     style={{ flex: 1, justifyContent: 'center', gap: '8px' }}
                   >
-                    <span>Tegishli Bo'limga O'tish</span>
+                    <span>{dStr.goToSection}</span>
                     <ArrowRight size={16} />
                   </button>
                 )}
@@ -792,7 +684,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
                   className="btn-secondary"
                   style={{ flex: selectedNews.actionTab ? '0 0 auto' : 1, padding: '12px 20px', justifyContent: 'center' }}
                 >
-                  Yopish
+                  {dStr.closeBtn}
                 </button>
               </div>
             </div>
@@ -915,14 +807,16 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
             { id: 'plan-trip', label: t('planTrip'), icon: Sparkles, color: 'var(--accent-turquoise)', desc: t('planMyTrip') },
             { id: 'map', label: t('smartMap'), icon: MapPin, color: 'var(--accent-gold)', desc: t('exploreMap') },
             { id: 'ai-guide', label: t('aiGuide'), icon: Bot, color: '#05B2D2', desc: t('audioGuide') },
-            { id: 'budget-tracker', label: 'Byudjet & Hamyon', icon: Wallet, color: '#10B981', desc: 'Kartalar & Xarajat' },
-            { id: 'weather-seasons', label: 'Ob-havo & Mavsum', icon: CloudSun, color: '#38BDF8', desc: '7 Kunlik Iqlim Gidi' },
+            { id: 'translator', label: t('voiceTranslator') || 'Voice Translator', icon: Languages, color: '#38BDF8', desc: dStr.transDesc },
+            { id: 'scan-place', label: t('cameraScan') || 'AI Camera Scanner', icon: Camera, color: '#A855F7', desc: dStr.scanDesc },
+            { id: 'budget-tracker', label: t('budgetTracker') || 'Budget & Wallet', icon: Wallet, color: '#10B981', desc: dStr.budgetDesc },
+            { id: 'weather-seasons', label: t('weatherSeasons') || 'Weather & Seasons', icon: CloudSun, color: '#38BDF8', desc: dStr.weatherDesc },
             { id: 'gastronomy', label: t('gastronomy'), icon: Utensils, color: '#EF4444', desc: t('plovTime') },
-            { id: 'hotels', label: t('hotels') || 'Mehmonxonalar', icon: Hotel, color: '#818CF8', desc: 'Top Mehmonxonalar' },
+            { id: 'hotels', label: t('hotels') || 'Hotels', icon: Hotel, color: '#818CF8', desc: dStr.hotelsDesc },
             { id: 'bazaar-calculator', label: t('bazaarCalc'), icon: Coins, color: 'var(--accent-gold)', desc: t('bazaarBargain') },
-            { id: 'transport', label: t('transport'), icon: Train, color: '#05B2D2', desc: t('fastTrainMetro') },
-            { id: 'sos', label: t('sosHelp'), icon: ShieldAlert, color: '#F87171', desc: t('emergencyPolice') },
-            { id: 'destinations', label: t('destinations'), icon: Globe, color: 'var(--accent-turquoise)', desc: '14 Hududlar' }
+            { id: 'transport', label: t('transport'), icon: Train, color: '#05B2D2', desc: dStr.trainDesc },
+            { id: 'sos', label: t('sosHelp'), icon: ShieldAlert, color: '#F87171', desc: dStr.sosDesc },
+            { id: 'destinations', label: t('destinations'), icon: Globe, color: 'var(--accent-turquoise)', desc: dStr.destDesc }
           ].map((act) => {
             const Icon = act.icon;
             return (
@@ -1034,11 +928,11 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
                   borderTop: '1px solid var(--border-subtle)'
                 }}>
                   <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--accent-turquoise)' }}>
-                    {place.ticketPriceUzs > 0 ? `${place.ticketPriceUzs.toLocaleString()} UZS` : 'Free Entry'}
+                    {place.ticketPriceUzs > 0 ? `${place.ticketPriceUzs.toLocaleString()} UZS` : dStr.freeEntry}
                   </span>
 
                   <span style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    <Clock size={12} /> {place.recommendedVisitDurationMinutes} mins
+                    <Clock size={12} /> {place.recommendedVisitDurationMinutes} {dStr.minutes}
                   </span>
                 </div>
               </div>

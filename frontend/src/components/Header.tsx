@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import {
   MapPin,
   Sparkles,
-  LogOut,
   SunMedium,
   Globe,
   Crown,
@@ -17,18 +16,20 @@ import { LiveTouristSignal } from '../types';
 
 interface HeaderProps {
   onOpenPlanner: () => void;
+  onOpenTranslator?: () => void;
   onOpenAdmin?: () => void;
   onToggleMobileMenu?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
   onOpenPlanner,
+  onOpenTranslator,
   onOpenAdmin,
   onToggleMobileMenu
 }) => {
   const { location, setManualCity } = useLocation();
   const { currentLanguage, setLanguage, languages, t } = useLanguage();
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const isAdmin = user?.role === 'Admin';
   const [liveStats, setLiveStats] = useState<LiveTouristSignal | null>(null);
 
@@ -128,19 +129,6 @@ export const Header: React.FC<HeaderProps> = ({
 
         {/* Desktop Quick Actions (hidden on mobile / phone frame) */}
         <div className="header-desktop-actions">
-          <button
-            onClick={logout}
-            className="btn-secondary header-action-btn"
-            title={t('logout')}
-            style={{
-              borderColor: 'rgba(239, 68, 68, 0.35)',
-              background: 'rgba(239, 68, 68, 0.08)'
-            }}
-          >
-            <LogOut size={15} color="#F87171" />
-            <span className="action-btn-label" style={{ color: '#FCA5A5' }}>{t('logout')}</span>
-          </button>
-
           <button
             onClick={onOpenPlanner}
             className="btn-primary header-action-btn-primary"

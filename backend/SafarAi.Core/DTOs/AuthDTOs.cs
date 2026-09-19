@@ -63,3 +63,20 @@ public record UpdateProfileRequestDto(
     string? AvatarUrl = null
 );
 
+public record ForgotPasswordRequestDto(
+    string Identifier
+);
+
+public record ForgotPasswordResponseDto(
+    bool Success,
+    string Message,
+    string? ResetCode = null,
+    string? TargetEmail = null
+);
+
+public record ResetPasswordRequestDto(
+    string Identifier,
+    string ResetCode,
+    string NewPassword
+);
+

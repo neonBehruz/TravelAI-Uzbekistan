@@ -255,6 +255,80 @@ public class AuthService : IAuthService
             CreatedAt: user.CreatedAt
         );
     }
+
+    public async Task<ForgotPasswordResponseDto> ForgotPasswordAsync(ForgotPasswordRequestDto request)
+    {
+        var raw = (request.Identifier ?? "").Trim().ToLower();
+        if (string.IsNullOrWhiteSpace(raw))
+        {
+            throw new InvalidOperationException("Foydalanuvchi nomi yoki email kiritilmadi.");
+        }
+
+        var user = await _dbContext.Users.FirstOrDefaultAsync(u =>
+            u.Email.ToLower() == raw ||
+            u.Name.ToLower() == raw ||
+            u.Email.ToLower().StartsWith(raw + "@") ||
+            u.Name.ToLower().Contains(raw)
+        );
+
+        if (user == null)
+        {
+            throw new InvalidOperationException($"'{request.Identifier}' nomli foydalanuvchi topilmadi. Iltimos oldin ro'yxatdan o'ting.");
+        }
+
+        var resetCode = Random.Shared.Next(100000, 999999).ToString();
+        user.PasswordResetCode = resetCode;
+        user.PasswordResetExpiresAt = DateTime.UtcNow.AddMinutes(15);
+        await _dbContext.SaveChangesAsync();
+
+        return new ForgotPasswordResponseDto(
+            Success: true,
+            Message: "Tiklash kodi muvaffaqiyatli shakllantirildi.",
+            ResetCode: resetCode,
+            TargetEmail: user.Email
+        );
+    }
+
+    public async Task<bool> ResetPasswordAsync(ResetPasswordRequestDto request)
+    {
+        var raw = (request.Identifier ?? "").Trim().ToLower();
+        if (string.IsNullOrWhiteSpace(raw))
+        {
+            throw new InvalidOperationException("Foydalanuvchi nomi yoki email kiritilmadi.");
+        }
+
+        var user = await _dbContext.Users.FirstOrDefaultAsync(u =>
+            u.Email.ToLower() == raw ||
+            u.Name.ToLower() == raw ||
+            u.Email.ToLower().StartsWith(raw + "@") ||
+            u.Name.ToLower().Contains(raw)
+        );
+
+        if (user == null)
+        {
+            throw new InvalidOperationException($"'{request.Identifier}' nomli foydalanuvchi topilmadi.");
+        }
+
+        if (string.IsNullOrWhiteSpace(user.PasswordResetCode) || 
+            user.PasswordResetCode.Trim() != request.ResetCode.Trim() ||
+            user.PasswordResetExpiresAt == null ||
+            user.PasswordResetExpiresAt < DateTime.UtcNow)
+        {
+            throw new InvalidOperationException("Noto'g'ri yoki muddati o'tgan tasdiqlash kodi.");
+        }
+
+        if (string.IsNullOrWhiteSpace(request.NewPassword) || request.NewPassword.Length < 6)
+        {
+            throw new InvalidOperationException("Yangi parol kamida 6 belgidan iborat bo'lishi kerak.");
+        }
+
+        user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
+        user.PasswordResetCode = null;
+        user.PasswordResetExpiresAt = null;
+
+        await _dbContext.SaveChangesAsync();
+        return true;
+    }
 }
 
 public class PlaceService : IPlaceService

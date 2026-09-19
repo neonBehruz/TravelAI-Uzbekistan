@@ -45,6 +45,34 @@ public class AuthController : ControllerBase
         }
     }
 
+    [HttpPost("forgot-password")]
+    public async Task<ActionResult<ForgotPasswordResponseDto>> ForgotPassword([FromBody] ForgotPasswordRequestDto request)
+    {
+        try
+        {
+            var result = await _authService.ForgotPasswordAsync(request);
+            return Ok(result);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    [HttpPost("reset-password")]
+    public async Task<ActionResult<object>> ResetPassword([FromBody] ResetPasswordRequestDto request)
+    {
+        try
+        {
+            var success = await _authService.ResetPasswordAsync(request);
+            return Ok(new { success, message = "Parol muvaffaqiyatli yangilandi." });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
     [HttpPost("refresh-token")]
     public async Task<ActionResult<AuthResponseDto>> RefreshToken([FromBody] RefreshTokenRequestDto request)
     {

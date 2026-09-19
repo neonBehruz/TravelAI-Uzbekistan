@@ -9,14 +9,22 @@ class SignalRService {
   public startConnection() {
     if (this.connection) return;
 
+    const hubUrl = typeof window !== 'undefined' && (window.location.port === '5173' || window.location.hostname === 'localhost')
+      ? 'http://localhost:5050/hubs/safar'
+      : '/hubs/safar';
+
     this.connection = new signalR.HubConnectionBuilder()
-      .withUrl('/hubs/safar', {
+      .withUrl(hubUrl, {
         skipNegotiation: false,
         transport: signalR.HttpTransportType.WebSockets | signalR.HttpTransportType.LongPolling
       })
       .withAutomaticReconnect([0, 2000, 5000, 10000, 30000])
       .configureLogging(signalR.LogLevel.Warning)
       .build();
+
+    this.connection.on('ConnectedConfirmation', (data: { connectionId: string; serverTime: string }) => {
+      console.log('⚡ SignalR handshake confirmed by backend:', data);
+    });
 
     this.connection.on('LiveStatsUpdate', (signal: LiveTouristSignal) => {
       this.listeners.forEach((cb) => cb(signal));

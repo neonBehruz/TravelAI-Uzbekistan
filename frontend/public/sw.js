@@ -1,5 +1,5 @@
 // Safar AI Offline & Native APK Service Worker
-const CACHE_NAME = 'safar-ai-v1.0.0';
+const CACHE_NAME = 'safar-ai-v2.1.0';
 const STATIC_ASSETS = [
   '/',
   '/index.html',

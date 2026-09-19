@@ -17,7 +17,8 @@ import {
   Landmark,
   Train,
   ChevronDown,
-  Globe
+  Globe,
+  Languages
 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { LanguageCode } from '../i18n/translations';
@@ -144,7 +145,11 @@ const GREETINGS: Partial<Record<LanguageCode, { text: (city: string) => string; 
   }
 };
 
-export const AiGuidePage: React.FC = () => {
+interface AiGuidePageProps {
+  onNavigate?: (tab: string, params?: any) => void;
+}
+
+export const AiGuidePage: React.FC<AiGuidePageProps> = ({ onNavigate }) => {
   const { currentLanguage, languages, t } = useLanguage();
   const { playAudio } = useAudioGuide();
   const { location } = useLocation();
@@ -692,6 +697,30 @@ export const AiGuidePage: React.FC = () => {
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            {onNavigate && (
+              <button
+                onClick={() => onNavigate('translator')}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  background: 'linear-gradient(135deg, rgba(0, 168, 150, 0.25), rgba(212, 175, 55, 0.2))',
+                  border: '1px solid rgba(0, 168, 150, 0.5)',
+                  color: '#fff',
+                  padding: '6px 14px',
+                  borderRadius: 'var(--radius-full)',
+                  fontSize: '12px',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease'
+                }}
+                title="Jonli 2-tomonlama Ovozli Tarjimon"
+              >
+                <Languages size={15} color="var(--accent-turquoise)" />
+                <span>Ovozli Tarjimon</span>
+              </button>
+            )}
+
             {/* Direct Isolated Language Switcher for AI Chat only */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(255,255,255,0.06)', padding: '4px 10px', borderRadius: 'var(--radius-full)', border: '1px solid var(--border-subtle)' }}>
               <Globe size={14} color="var(--accent-turquoise)" />

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Compass,
   MapPin,
@@ -18,10 +18,19 @@ import {
   Hotel,
   Wallet,
   CloudSun,
+  Languages,
+  Camera,
   X
 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
+
+interface NavItem {
+  id: string;
+  label: string;
+  icon: React.ComponentType<{ size?: number; color?: string }>;
+  badge?: string;
+}
 
 interface SidebarProps {
   currentTab: string;
@@ -38,6 +47,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 }) => {
   const { currentLanguage, setLanguage, languages, t } = useLanguage();
   const { user, isAuthenticated, logout } = useAuth();
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   const isAdmin = user?.role === 'Admin';
 
@@ -46,13 +56,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
     if (onCloseMobile) onCloseMobile();
   };
 
-  const navItems = [
+  const navItems: NavItem[] = [
     { id: 'dashboard', label: t('dashboard'), icon: Compass },
     { id: 'plan-trip', label: t('planTrip'), icon: Sparkles },
     { id: 'map', label: t('smartMap'), icon: MapPin },
     { id: 'ai-guide', label: t('aiGuide'), icon: Bot },
-    { id: 'budget-tracker', label: 'Byudjet & Hamyon', icon: Wallet },
-    { id: 'weather-seasons', label: 'Ob-havo & Mavsum', icon: CloudSun },
+    { id: 'translator', label: t('voiceTranslator') || 'Ovozli Tarjimon', icon: Languages },
+    { id: 'scan-place', label: t('cameraScan') || 'AI Kamera Skaner', icon: Camera },
+    { id: 'budget-tracker', label: t('budgetTracker') || 'Byudjet & Hamyon', icon: Wallet },
+    { id: 'weather-seasons', label: t('weatherSeasons') || 'Ob-havo & Mavsum', icon: CloudSun },
     { id: 'gastronomy', label: t('gastronomy'), icon: Utensils },
     { id: 'hotels', label: t('hotels') || 'Mehmonxonalar', icon: Hotel },
     { id: 'bazaar-calculator', label: t('bazaarCalc'), icon: Coins },
@@ -168,7 +180,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                 <ShieldCheck size={18} color="var(--accent-gold)" />
-                <span>Admin Boshqaruv Paneli</span>
+                <span>{currentLanguage === 'it' ? 'Pannello Admin' : currentLanguage === 'ru' ? 'Панель Администратора' : currentLanguage === 'uz' ? 'Admin Boshqaruv Paneli' : 'Admin Control Panel'}</span>
               </div>
               <span style={{
                 fontSize: '9.5px',
@@ -188,7 +200,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
         {/* Navigation List */}
         <nav style={{ flex: 1, overflowY: 'auto', marginTop: '12px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
           <div style={{ fontSize: '10px', fontWeight: 800, color: 'var(--text-muted)', letterSpacing: '0.08em', textTransform: 'uppercase', padding: '0 4px 4px' }}>
-            {isAdmin ? 'Traveler Views' : 'Navigation'}
+            {isAdmin 
+              ? (currentLanguage === 'it' ? 'Viste Viaggiatore' : currentLanguage === 'ru' ? 'Разделы Туриста' : currentLanguage === 'uz' ? "Sayyoh Ko'rinishlari" : 'Traveler Views')
+              : (currentLanguage === 'it' ? 'Navigazione' : currentLanguage === 'ru' ? 'Навигация' : currentLanguage === 'uz' ? 'Navigatsiya' : 'Navigation')}
           </div>
           {navItems.map((item) => {
             const Icon = item.icon;
@@ -203,6 +217,20 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   <Icon size={18} color={isActive ? 'var(--accent-turquoise)' : 'var(--text-secondary)'} />
                   <span>{item.label}</span>
                 </div>
+                {item.badge && (
+                  <span style={{
+                    fontSize: '9px',
+                    fontWeight: 800,
+                    background: 'rgba(0, 168, 150, 0.25)',
+                    color: 'var(--accent-turquoise)',
+                    padding: '2px 6px',
+                    borderRadius: '4px',
+                    border: '1px solid rgba(0, 168, 150, 0.45)',
+                    marginLeft: 'auto'
+                  }}>
+                    {item.badge}
+                  </span>
+                )}
               </button>
             );
           })}
@@ -253,17 +281,36 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     alignItems: 'center',
                     gap: '4px'
                   }}>
-                    {isAdmin ? '👑 ADMINISTRATOR' : `🎒 SAYYOH (${user.country})`}
+                    {isAdmin ? '👑 ADMINISTRATOR' : `🎒 ${(t('travelerRole') || 'TRAVELER').toUpperCase()} (${user.country})`}
                   </div>
                 </div>
               </div>
               <button
-                onClick={() => {
-                  logout();
-                  if (onCloseMobile) onCloseMobile();
+                onClick={() => setShowLogoutConfirm(true)}
+                title={t('logout') || 'Chiqish'}
+                aria-label="Akkauntdan chiqish"
+                style={{
+                  padding: '7px',
+                  color: 'var(--text-muted)',
+                  borderRadius: '8px',
+                  background: 'rgba(239, 68, 68, 0.08)',
+                  border: '1px solid rgba(239, 68, 68, 0.2)',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  transition: 'all 0.2s'
                 }}
-                title="Logout"
-                style={{ padding: '6px', color: 'var(--text-muted)', borderRadius: '6px', background: 'none', border: 'none', cursor: 'pointer', transition: 'color 0.2s' }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.color = '#F87171';
+                  e.currentTarget.style.background = 'rgba(239, 68, 68, 0.18)';
+                  e.currentTarget.style.borderColor = 'rgba(239, 68, 68, 0.4)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.color = 'var(--text-muted)';
+                  e.currentTarget.style.background = 'rgba(239, 68, 68, 0.08)';
+                  e.currentTarget.style.borderColor = 'rgba(239, 68, 68, 0.2)';
+                }}
               >
                 <LogOut size={16} />
               </button>
@@ -306,6 +353,101 @@ export const Sidebar: React.FC<SidebarProps> = ({
           )}
         </div>
       </aside>
+
+      {/* Logout Confirmation Modal */}
+      {showLogoutConfirm && (
+        <div
+          className="install-modal-overlay"
+          onClick={() => setShowLogoutConfirm(false)}
+          style={{ zIndex: 12000 }}
+        >
+          <div
+            className="glass-panel"
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              width: '100%',
+              maxWidth: '380px',
+              padding: '24px',
+              borderRadius: '16px',
+              background: '#0D1630',
+              border: '1px solid rgba(239, 68, 68, 0.35)',
+              boxShadow: '0 25px 60px rgba(0, 0, 0, 0.85), 0 0 30px rgba(239, 68, 68, 0.2)',
+              position: 'relative',
+              animation: 'fadeIn 0.2s ease',
+              textAlign: 'center'
+            }}
+          >
+            <div
+              style={{
+                width: '52px',
+                height: '52px',
+                borderRadius: '50%',
+                background: 'rgba(239, 68, 68, 0.15)',
+                border: '1px solid rgba(239, 68, 68, 0.35)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                margin: '0 auto 16px auto',
+                color: '#F87171'
+              }}
+            >
+              <LogOut size={24} />
+            </div>
+
+            <h3 style={{ fontSize: '18px', fontWeight: 800, color: '#fff', margin: '0 0 8px 0' }}>
+              {t('logoutConfirmTitle') || 'Akkauntdan chiqish'}
+            </h3>
+            <p style={{ fontSize: '14px', color: '#94A3B8', margin: '0 0 24px 0', lineHeight: 1.5 }}>
+              {t('logoutConfirmDesc') || 'Siz haqiqatdan ham chiqmoqchimisiz?'}
+            </p>
+
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+              <button
+                type="button"
+                onClick={() => setShowLogoutConfirm(false)}
+                style={{
+                  flex: 1,
+                  padding: '10px 16px',
+                  borderRadius: '10px',
+                  background: 'rgba(255, 255, 255, 0.08)',
+                  border: '1px solid rgba(255, 255, 255, 0.15)',
+                  color: '#E2E8F0',
+                  fontSize: '13px',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  transition: 'background 0.2s'
+                }}
+              >
+                {t('cancelBtn') || t('cancel') || 'Bekor qilish'}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowLogoutConfirm(false);
+                  logout();
+                  if (onCloseMobile) onCloseMobile();
+                  handleItemClick('landing');
+                }}
+                style={{
+                  flex: 1,
+                  padding: '10px 16px',
+                  borderRadius: '10px',
+                  background: 'linear-gradient(135deg, #EF4444, #DC2626)',
+                  border: 'none',
+                  color: '#FFFFFF',
+                  fontSize: '13px',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  boxShadow: '0 4px 14px rgba(239, 68, 68, 0.4)',
+                  transition: 'transform 0.15s'
+                }}
+              >
+                {t('confirmLogoutBtn') || 'Ha, chiqish'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 };

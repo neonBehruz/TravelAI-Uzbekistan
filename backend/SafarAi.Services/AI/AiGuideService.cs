@@ -498,14 +498,14 @@ public class AiGuideService : IAIGuideService
             if (isUz)
             {
                 reply = "Afrosiyob Poyezdi va O'zbekistonda Transport 🚄\n\n" +
-                        "• Afrosiyob Tezyurar Poyezdi: Toshkent, Samarqand va Buxoroni 2–3 soatda bog'laydi. Tezligi 250 km/soat. Chiptalarni 15-45 kun oldin e-ticket.railway.uz saytidan xarid qilish tavsiya etiladi.\n" +
+                        "• Afrosiyob Tezyurar Poyezdi: Toshkent, Samarqand va Buxoroni 2–3 soatda bog'laydi. Tezligi 250 km/soat. Chiptalarni 15-45 kun oldin ticket.elektropoyezd.uz saytidan xarid qilish tavsiya etiladi.\n" +
                         "• Shahar Ichida Taksi: Yandex Go ilovasi orqali aniq tariflarda yurish juda qulay (o'rtacha yo'l haqi 15,000 - 30,000 so'm / ~$1.50 - $2.50).\n" +
                         "• Toshkent Metropoliteni: Har bir bekati san'at asari bo'lgan go'zal metro. Yo'l haqi 2,000 so'm (QR chipta yoki bank kartasi).";
             }
             else
             {
                 reply = "Afrosiyob Bullet Train & Transit Guide 🚄\n\n" +
-                        "• Afrosiyob High-Speed Train: Connects Tashkent, Samarkand, and Bukhara in 2–3 hours at 250 km/h. Book official tickets 15–45 days ahead on e-ticket.railway.uz.\n" +
+                        "• Afrosiyob High-Speed Train: Connects Tashkent, Samarkand, and Bukhara in 2–3 hours at 250 km/h. Book official tickets 15–45 days ahead on ticket.elektropoyezd.uz.\n" +
                         "• City Taxis: Use the Yandex Go ride-hailing app for transparent, cheap rides (typically 15,000 – 30,000 UZS / $1.50 - $2.50).\n" +
                         "• Tashkent Metro: Ornate architectural underground stations. Fare is only 2,000 UZS (~$0.15).";
             }

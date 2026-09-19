@@ -39,6 +39,10 @@ public class User
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? LastLoginAt { get; set; }
 
+    [MaxLength(10)]
+    public string? PasswordResetCode { get; set; }
+    public DateTime? PasswordResetExpiresAt { get; set; }
+
     public ICollection<Trip> Trips { get; set; } = new List<Trip>();
     public ICollection<Review> Reviews { get; set; } = new List<Review>();
     public ICollection<SavedPlace> SavedPlaces { get; set; } = new List<SavedPlace>();

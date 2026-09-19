@@ -11,6 +11,8 @@ public interface IAuthService
     Task<bool> LogoutAsync(string? refreshToken, Guid? userId = null);
     Task<UserProfileDto> GetProfileAsync(Guid userId);
     Task<UserProfileDto> UpdateProfileAsync(Guid userId, UpdateProfileRequestDto request);
+    Task<ForgotPasswordResponseDto> ForgotPasswordAsync(ForgotPasswordRequestDto request);
+    Task<bool> ResetPasswordAsync(ResetPasswordRequestDto request);
 }
 
 public interface IPlaceService

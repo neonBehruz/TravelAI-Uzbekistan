@@ -71,6 +71,7 @@ const MainLayout: React.FC = () => {
     return parseHash().params.id || 'p1';
   });
   const [routeActivities, setRouteActivities] = useState<AiTripActivity[] | undefined>(undefined);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const handleNavigate = useCallback((tab: string, params?: any, replace = false) => {
     let targetTab = tab;
@@ -172,6 +173,17 @@ const MainLayout: React.FC = () => {
     );
   }
 
+  if (currentTab === 'forgot-password') {
+    return (
+      <AuthPages
+        mode="forgot-password"
+        onSwitchMode={(m) => handleNavigate(m)}
+        onSuccess={() => handleNavigate('dashboard')}
+        onBack={() => handleNavigate('landing')}
+      />
+    );
+  }
+
   if (!isAuthenticated) {
     return (
       <AuthPages
@@ -182,8 +194,6 @@ const MainLayout: React.FC = () => {
       />
     );
   }
-
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   return (
     <div className="app-container">
@@ -200,6 +210,7 @@ const MainLayout: React.FC = () => {
         {/* Sticky Header */}
         <Header
           onOpenPlanner={() => handleNavigate('plan-trip')}
+          onOpenTranslator={() => handleNavigate('translator')}
           onOpenAdmin={() => handleNavigate('admin')}
           onToggleMobileMenu={() => setIsMobileMenuOpen((prev) => !prev)}
         />
@@ -232,7 +243,7 @@ const MainLayout: React.FC = () => {
             />
           )}
 
-          {currentTab === 'ai-guide' && <AiGuidePage />}
+          {currentTab === 'ai-guide' && <AiGuidePage onNavigate={handleNavigate} />}
 
           {currentTab === 'scan-place' && (
             <ScanPlacePage onNavigatePlace={(placeId) => handleNavigate('place-detail', { id: placeId })} />

@@ -2,14 +2,7 @@ import React, { useState } from 'react';
 import {
   Coins,
   Calculator,
-  Volume2,
-  TrendingDown,
-  Sparkles,
-  ShoppingBag,
-  Info,
-  CheckCircle,
-  Percent,
-  RefreshCw
+  Volume2
 } from 'lucide-react';
 import { UzbekFlag } from '../components/UzbekFlag';
 import { useLanguage, LanguageCode } from '../context/LanguageContext';
@@ -282,10 +275,6 @@ export const BazaarCalculatorPage: React.FC = () => {
   const [foreignAmount, setForeignAmount] = useState<string>('100');
   const [uzsAmount, setUzsAmount] = useState<string>((100 * CURRENCIES[0].rateToUzs).toLocaleString('uz-UZ'));
 
-  // Bargain AI state
-  const [selectedItem, setSelectedItem] = useState<BazaarItem>(BAZAAR_ITEMS[0]);
-  const [askingPrice, setAskingPrice] = useState<string>('50000');
-
   const handleForeignChange = (val: string) => {
     setForeignAmount(val);
     const num = parseFloat(val);
@@ -315,11 +304,6 @@ export const BazaarCalculatorPage: React.FC = () => {
       window.speechSynthesis.speak(utterance);
     }
   };
-
-  const parsedAsking = parseFloat(askingPrice.replace(/\D/g, '')) || selectedItem.typicalFairPriceUZS * 1.4;
-  const counterOffer = Math.round(parsedAsking * 0.6 / 1000) * 1000;
-  const realisticDeal = Math.round(parsedAsking * selectedItem.discountFactor / 1000) * 1000;
-  const savings = Math.max(0, parsedAsking - realisticDeal);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '32px', maxWidth: '1000px', margin: '0 auto' }}>
@@ -408,96 +392,6 @@ export const BazaarCalculatorPage: React.FC = () => {
         </div>
       </div>
 
-      {/* 2. Bazaar Bargaining Calculator */}
-      <div className="glass-panel" style={{ padding: '24px', borderRadius: 'var(--radius-lg)' }}>
-        <h2 style={{ fontSize: '18px', color: '#fff', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <ShoppingBag size={18} color="var(--accent-turquoise)" /> {tBazaar.bargainingTitle}
-        </h2>
-
-        {/* Item Selector Chips */}
-        <div style={{ marginBottom: '16px' }}>
-          <label style={{ display: 'block', fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '8px' }}>
-            {tBazaar.selectProduct}
-          </label>
-          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-            {BAZAAR_ITEMS.map((item) => (
-              <button
-                key={item.id}
-                onClick={() => {
-                  setSelectedItem(item);
-                  setAskingPrice((item.typicalFairPriceUZS * 1.4).toString());
-                }}
-                style={{
-                  padding: '6px 14px',
-                  borderRadius: 'var(--radius-full)',
-                  background: selectedItem.id === item.id ? 'var(--accent-turquoise)' : 'rgba(255,255,255,0.05)',
-                  color: selectedItem.id === item.id ? '#070D1E' : '#fff',
-                  border: selectedItem.id === item.id ? 'none' : '1px solid var(--border-subtle)',
-                  fontSize: '12px',
-                  fontWeight: 700,
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease'
-                }}
-              >
-                {item.name}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Calculation Matrix */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px', marginTop: '20px' }}>
-          {/* Asking Price Input */}
-          <div style={{ background: 'rgba(255,255,255,0.02)', padding: '16px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)' }}>
-            <label style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '6px' }}>
-              {tBazaar.askingPriceLabel}
-            </label>
-            <input
-              type="number"
-              value={askingPrice}
-              onChange={(e) => setAskingPrice(e.target.value)}
-              style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border-subtle)', borderRadius: '8px', padding: '10px 12px', color: '#fff', fontSize: '18px', fontWeight: 800, outline: 'none' }}
-            />
-            <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '6px' }}>
-              {tBazaar.fairPriceLabel} {selectedItem.typicalFairPriceUZS.toLocaleString('uz-UZ')} UZS
-            </div>
-          </div>
-
-          {/* AI Recommended Start Offer */}
-          <div style={{ background: 'rgba(212, 175, 55, 0.08)', padding: '16px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-gold)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--accent-gold)', fontSize: '12px', fontWeight: 700 }}>
-              <TrendingDown size={14} /> {tBazaar.suggestedOffer}
-            </div>
-            <div style={{ fontSize: '24px', fontWeight: 900, color: 'var(--accent-gold)', marginTop: '8px' }}>
-              {counterOffer.toLocaleString('uz-UZ')} <span style={{ fontSize: '14px' }}>UZS</span>
-            </div>
-            <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>
-              Sotuvchi aytgan narxdan 40% pastroq taklif bering.
-            </div>
-          </div>
-
-          {/* AI Fair Deal Target */}
-          <div style={{ background: 'rgba(0, 168, 150, 0.1)', padding: '16px', borderRadius: 'var(--radius-md)', border: '1px solid var(--accent-turquoise)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--accent-turquoise)', fontSize: '12px', fontWeight: 700 }}>
-              <CheckCircle size={14} /> {tBazaar.dealPrice}
-            </div>
-            <div style={{ fontSize: '24px', fontWeight: 900, color: '#fff', marginTop: '8px' }}>
-              {realisticDeal.toLocaleString('uz-UZ')} <span style={{ fontSize: '14px' }}>UZS</span>
-            </div>
-            <div style={{ fontSize: '11px', color: '#10B981', marginTop: '4px', fontWeight: 700 }}>
-              ✓ {tBazaar.youSave}: {savings.toLocaleString('uz-UZ')} UZS
-            </div>
-          </div>
-        </div>
-
-        {/* Local Expert Tip */}
-        <div style={{ marginTop: '16px', padding: '14px', borderRadius: 'var(--radius-md)', background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border-subtle)', display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
-          <Info size={16} color="var(--accent-gold)" style={{ flexShrink: 0, marginTop: '2px' }} />
-          <div style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
-            <strong style={{ color: '#fff' }}>Mahalliy maslahat:</strong> {selectedItem.tips}
-          </div>
-        </div>
-      </div>
 
       {/* 3. Essential Uzbek Bazaar Phrases with Audio */}
       <div>
