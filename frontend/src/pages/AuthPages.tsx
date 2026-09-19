@@ -143,11 +143,17 @@ export const AuthPages: React.FC<AuthPagesProps> = ({ mode, onSwitchMode, onSucc
           email: res.email,
           country: res.country,
           language: userLang,
-          role: res.role as any
+          role: res.role as any,
+          avatarUrl: res.avatarUrl
         });
         onSuccess();
       } catch (err: any) {
-        setError(err.message || 'Login failed.');
+        const msg = err?.message || '';
+        if (msg.includes('Failed to fetch') || msg.includes('NetworkError')) {
+          setError('Server bilan aloqa vaqtinchalik uzildi. Sayyoh yoki Admin demo tugmasini bosing.');
+        } else {
+          setError(msg || 'Kirishda xatolik yuz berdi (Login failed).');
+        }
       } finally {
         setLoading(false);
       }
@@ -171,6 +177,39 @@ export const AuthPages: React.FC<AuthPagesProps> = ({ mode, onSwitchMode, onSucc
       setOtpInput('');
       setOtpSentNotification(`✉️ ${t('otpDesc') || 'Kod yuborildi'} (${gmail.trim()}): ${code}`);
       setIsOtpStep(true);
+    }
+  };
+
+  // Quick One-Click Demo Login
+  const handleQuickDemo = async (demoId: string, demoPass: string) => {
+    setLoginIdentifier(demoId);
+    setPassword(demoPass);
+    setError('');
+    setLoading(true);
+    try {
+      const res = await api.login(demoId, demoPass);
+      const userLang = getLanguageForCountry(res.country) || (res.language as LanguageCode) || currentLanguage;
+      setLanguage(userLang);
+
+      login(res.token, {
+        id: res.userId,
+        name: res.name,
+        email: res.email,
+        country: res.country,
+        language: userLang,
+        role: res.role as any,
+        avatarUrl: res.avatarUrl
+      });
+      onSuccess();
+    } catch (err: any) {
+      const msg = err?.message || '';
+      if (msg.includes('Failed to fetch') || msg.includes('NetworkError')) {
+        setError('Server bilan aloqa vaqtinchalik uzildi.');
+      } else {
+        setError(msg || 'Kirishda xatolik yuz berdi.');
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -1058,12 +1097,8 @@ export const AuthPages: React.FC<AuthPagesProps> = ({ mode, onSwitchMode, onSucc
                 <div style={{ display: 'flex', gap: '8px' }}>
                   <button
                     type="button"
-                    title="Sayyoh: tourist@safarai.com / Tourist123!"
-                    onClick={() => {
-                      setLoginIdentifier('tourist@safarai.com');
-                      setPassword('Tourist123!');
-                      setError('');
-                    }}
+                    title="Sayyoh sifatida kirish (tourist@safarai.com / Tourist123!)"
+                    onClick={() => handleQuickDemo('tourist@safarai.com', 'Tourist123!')}
                     style={{ background: 'none', border: 'none', color: 'var(--accent-gold)', fontSize: '11.5px', fontWeight: 700, cursor: 'pointer', padding: 0 }}
                   >
                     Sayyoh
@@ -1071,12 +1106,8 @@ export const AuthPages: React.FC<AuthPagesProps> = ({ mode, onSwitchMode, onSucc
                   <span>|</span>
                   <button
                     type="button"
-                    title="Admin: admin@safarai.uz / Admin123!"
-                    onClick={() => {
-                      setLoginIdentifier('admin@safarai.uz');
-                      setPassword('Admin123!');
-                      setError('');
-                    }}
+                    title="Admin sifatida kirish (admin@safarai.uz / Admin123!)"
+                    onClick={() => handleQuickDemo('admin@safarai.uz', 'Admin123!')}
                     style={{ background: 'none', border: 'none', color: 'var(--accent-turquoise)', fontSize: '11.5px', fontWeight: 700, cursor: 'pointer', padding: 0 }}
                   >
                     Admin
